@@ -1,0 +1,23 @@
+namespace Doragon.Battle
+{
+    public class Vanguard : IBattleEntity
+    {
+        /// <summary>
+        /// Inherit basic constructor from <see cref="IBattleEntity"/>.
+        /// </summary>
+        /// <param name="manaType"></param>
+        /// <param name="hp"></param>
+        /// <param name="atk"></param>
+        /// <param name="def"></param>
+        /// <param name="matk"></param>
+        /// <param name="mdef"></param>
+        /// <param name="spd"></param>
+        public Vanguard(bool team, bool combatLine, string formalName, ManaType manaType, DamageType damageType, int hp, int atk, int def, int matk, int mdef, int spd)
+        : base(team, combatLine, formalName, manaType, damageType, hp, atk, def, matk, mdef, spd) { }
+
+        // TODO: basic skill quickslash
+        public void QuickSlash()
+        {
+        }
+    }
+}
