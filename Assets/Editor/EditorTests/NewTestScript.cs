@@ -1,11 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Cysharp.Threading.Tasks;
 
 public class NewTestScript
 {
+    // Called before each [Test]
+    [SetUp]
+    public void Init()
+    { /* ... */ }
+
+    // Called after each [Test]
+    [TearDown]
+    public void Cleanup()
+    { /* ... */ }
+    
     // A Test behaves as an ordinary method
     [Test]
     public void NewTestScriptSimplePasses()
@@ -22,4 +34,12 @@ public class NewTestScript
         // Use yield to skip a frame.
         yield return null;
     }
+
+    //Unity's [UnityTest] attribute can test coroutine(IEnumerator) but can not test async. 
+    //UniTask.ToCoroutine bridges async/await to coroutine so you can test async methods.
+    [UnityTest]
+    public IEnumerator DelayIgnore() => UniTask.ToCoroutine(async () =>
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(3), ignoreTimeScale: true);
+    });
 }

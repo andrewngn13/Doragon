@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 
 namespace Doragon.Battle
 {
@@ -11,20 +12,23 @@ namespace Doragon.Battle
     {
         Cut, Stab, Bash, Fire, Ice, Electric, Dark
     }
-    public abstract class IBattleEntity
+    public abstract class IBattleEntity : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler HPChanged;
         public bool MyTeam { get; }
         public bool FrontLine { get; }
+        public int LineIndex { get; }
         public string Name { get; }
         ManaType manaTyping { get; }
         DamageType normalDamageTyping { get; }
         int currentHp { get; }
-        int HP { get; }
+        public int HP { get; set; }
+        public int SPD { get; }
         int ATK { get; }
         int DEF { get; }
         int MATK { get; }
         int MDEF { get; }
-        int SPD { get; }
         /// <summary>
         /// Construct basic parameters for a IBattleEntity
         /// </summary>
@@ -38,11 +42,12 @@ namespace Doragon.Battle
         /// <param name="mdef"></param>
         /// <param name="spd"></param>
         // TODO: Consideration, change myTeam to a userID if networking ever happens
-        protected IBattleEntity(bool team, bool combatline, string formalName, ManaType manaType, DamageType normalDamageType,
+        protected IBattleEntity(bool team, bool combatline, int lineIndex, string formalName, ManaType manaType, DamageType normalDamageType,
             int hp, int atk, int def, int matk, int mdef, int spd)
         {
             MyTeam = team;
             FrontLine = combatline;
+            LineIndex = lineIndex;
             Name = formalName;
             manaTyping = manaType;
             normalDamageTyping = normalDamageType;
@@ -54,17 +59,26 @@ namespace Doragon.Battle
             MDEF = mdef;
             SPD = spd;
         }
-
-        public int GetSpeedRating()
+        protected void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            Random rand = new Random();
-            // TODO: better speed formula
-            return SPD * rand.Next(90, 121);
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, e);
+        }
+        protected void OnPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+        }
+        protected void OnHPChanged(EventArgs e)
+        {
+            EventHandler handler = HPChanged;
+            if (handler != null)
+                handler(this, e);
         }
         public DamageRequest NormalAttack()
         {
             // TODO: fix normal attacks
-            return new DamageRequest(ActionRole.Auxiliary, normalDamageTyping, manaTyping, TargettingType.Single, 1f, 0, this, null);
+            return new DamageRequest(ActionRole.Auxiliary, normalDamageTyping, manaTyping, TargettingType.Single, new int[4] { 1, -10, 2, -2 }, 1f, 0, this, null);
         }
     }
 }

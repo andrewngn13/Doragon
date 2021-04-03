@@ -1,35 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Doragon.Logging;
 using Cysharp.Text;
-
+using TMPro;
+using Cysharp.Threading.Tasks;
 namespace Doragon.Battle
 {
     public enum ActionRole
     {
         Primary, Auxiliary
-    }
-    public struct DamageRequest
-    {
-        ActionRole actionRole { get; }
-        DamageType damageTyping { get; }
-        ManaType manaTyping { get; }
-        TargettingType targetTyping { get; }
-        float damageMod { get; }
-        int priority { get; }
-        public IBattleEntity source { get; }
-        public IBattleEntity target { get; set; }
-        public DamageRequest(ActionRole role, DamageType damageType, ManaType manaType, TargettingType targetType, float damageModifier, int movePriority, IBattleEntity src, IBattleEntity tar)
-        {
-            actionRole = role;
-            damageTyping = damageType;
-            manaTyping = manaType;
-            targetTyping = targetType;
-            damageMod = damageModifier;
-            priority = movePriority;
-            source = src;
-            target = tar;
-        }
     }
 
     /// <summary>
@@ -49,70 +29,172 @@ namespace Doragon.Battle
     /// </summary>
     public class DamageHandler
     {
-        private static DamageHandler instance;
+        private const int minSpeedMod = 90, maxSpeedMod = 130;
+        private ManaLevels manaLevel;
         private TurnType turnTyping;
-        private static Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
+        private TextMeshProUGUI manaCalc, manaSum;
+        private readonly string[] colors = { "red", "green", "blue", "purple" };
+        private Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
+        private Random rand = new Random();
 
-        public DamageHandler(TurnType turnType = TurnType.COMMAND)
+        public DamageHandler(ManaLevels manaLevels, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText, TurnType turnType = TurnType.COMMAND)
         {
-            instance = this;
+            manaLevel = manaLevels;
+            manaCalc = manaCalcText;
+            manaSum = manaSumText;
             turnTyping = turnType;
         }
-
         /// <summary>
-        /// Command: Processes a damage request immediatedly and directs execution to animation.
+        /// Command: Processes a damage request and pushes it to the stack if target field is defined. Updates mana calc texts.
         /// </summary>
         /// <param name="damageRequest"></param>
-        /// <returns>A string representative of source execution towards target, or fumble.</returns>
-        public string PushDamageRequest(DamageRequest damageRequest)
+        public void PushDamageRequest(DamageRequest damageRequest)
         {
             if (damageRequest.target == null)
             {
-                DLogger.LogError("No target in this DamageRequest");
+                DLogger.LogWarning("No target in this DamageRequest");
+                throw new System.ArgumentNullException();
             }
             else
             {
-                DLogger.Log(ZString.Format("{0} has pushed a DamageRequest to stack", damageRequest.source.Name));
+                damageRequests.Push(damageRequest);
+                UpdateColorCalc(damageRequests, manaCalc, manaSum);
+                DLogger.Log(ZString.Format("{0} has pushed a DamageRequest to stack. {1} requests in stack.", damageRequest.source.Name, damageRequests.Count));
             }
-            // TODO: process a damageRequest
-            // TODO: Defer animation and damageNumber data
-            return ZString.Format("{0} fumbled!", damageRequest.source.Name);
         }
         /// <summary>
-        /// Pops a damageRequest off the stack if possible. Called when backtracking the slayer collection.
+        /// Pops a damageRequest off the stack if possible. Called when backtracking the slayer collection. Updates Mana Color text.
         /// </summary>
         public void PopDamageRequest()
         {
             if (damageRequests.Count > 0)
-                DLogger.Log(ZString.Format("{0}'s DamageRequest was popped off the stack", damageRequests.Pop().source.Name));
+            {
+                var popped = damageRequests.Pop();
+                UpdateColorCalc(damageRequests, manaCalc, manaSum);
+                DLogger.Log(ZString.Format("{0}'s DamageRequest was popped off the stack. {1} requests in stack.", popped.source.Name, damageRequests.Count));
+            }
             else
-                DLogger.LogError("DamageRequest stack is empty!");
+            {
+                DLogger.LogWarning("Stack is empty or out of bounds");
+                throw new System.IndexOutOfRangeException();
+            }
         }
 
         /// <summary>
         /// Processes the stack of DamageRequests and execute in speed formula + skill priority order
+        /// stack must be filled using <see cref="PushDamageRequest()">
         /// </summary>
-        public void ProcessDamageRequests()
+        // TODO: Execute damage requests
+        public async UniTask ProcessDamageRequests()
         {
-            // sort by descending speed, damageRequest execution order
-            var sortedRequests = damageRequests.ToList<DamageRequest>().OrderByDescending(s => s.source.GetSpeedRating());
+            DLogger.Log("Starting DamageRequest stack processing");
+            if (damageRequests.Count <= 0)
+                throw new System.IndexOutOfRangeException("DamageRequest stack is empty or out of bounds");
+            // TODO: Modularize speed calculations for easier testing / tweaking
+            // we create a new sorted by speed list of requests
+            var sortedRequests = damageRequests.ToList<DamageRequest>().OrderByDescending(s => s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod));
+            sortedRequests.ToList().ForEach(s => DLogger.Log(ZString.Format("{0}: {1}", s.source.Name, s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod))));
+            var sb = ZString.CreateStringBuilder();
+            sb.Append("Round Order: ");
+            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}, ", s.source.Name));
+            DLogger.Log(sb.ToString());
+            sb.Dispose();
+            //
 
+            foreach (var r in sortedRequests)
+            {
+                // TODO: Add auto target selection when main target cannot be selected
+                if (TargettingSystem.GetAvailableTargets().Where(tsprite => tsprite.selfBattleEntity == r.target).Count() == 0)
+                {
+                    throw new System.Exception("Target is already dead!");
+                }
+                DLogger.LogWarning("Fake animation sequence of 3 seconds");
+                await UniTask.Delay(TimeSpan.FromSeconds(3));
+                // TODO: fumbled if not enough mana
+                if (!manaLevel.AddMana(r.ManaChange))
+                {
+                    // return ZString.Format("{0} fumbled!", damageRequest.source.Name);
+                    DLogger.Log("Action has fumbled!");
+                    manaLevel.AnimateMana();
+                    // TODO: fumble animation?
+                    continue;
+                }
+                // TODO: attach damage to a projectile or animation hit
+                r.target.HP -= 5;
+                manaLevel.AnimateMana();
+                // TODO: output action to the log
+                // TODO: more involved damage, buffing, and debuffing
+                // TODO: damage formula
+
+                // TODO: deathchecking
+                if (r.target.HP <= 0)
+                {
+                    
+                    UnityEngine.GameObject.Destroy(TargettingSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == r.target).gameObject);
+                    DLogger.Log("Battle entity destroyed");
+                }
+                // more details about death: must darken a dead slayer, must death animate target sprites, 
+                // must update BattleUIHandlers collection of Battle profiles so dead ones are skipped
+                // reset targetting system available data with GetAvailableTargets
+                // ??? can we revive. sounds complicated.
+                // would have to not dispose of slayer targetting sprites / myTeam property
+
+                DLogger.Log(ZString.Format("{0} has {1} HP now", r.target.Name, r.target.HP));
+            }
+            // clear the stack
+            damageRequests.Clear();
+            // TODO: Defer animation and damageNumber data
+            DLogger.Log("DamageRequest stack processing complete");
+            await UniTask.CompletedTask;
         }
-        /* TODO: immediateDamageRequest quickplay
+
         /// <summary>
-        /// QUICKPLAY: Processes a damage request immediatedly and directs execution to animation.
+        /// Sets manaCalcText as DamageRequest mana changes per line, with delta mana change text on manaSumText
+        /// </summary>
+        /// <param name="damageRequestStack"></param>
+        /// <param name="manaCalcText"></param>
+        /// <param name="manaSumText"></param>
+        private void UpdateColorCalc(Stack<DamageRequest> damageRequestStack, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText)
+        {
+            using (var sb = ZString.CreateStringBuilder())
+            {
+                int[] deltaMana = new int[4];
+                damageRequestStack.ToList().ForEach(dr =>
+                {
+                    // format manaChange into string builder
+                    for (int i = 0; i < dr.ManaChange.Length; i++)
+                    {
+                        deltaMana[i] += dr.ManaChange[i];
+                        if (dr.ManaChange[i] >= 0)
+                            sb.AppendFormat("<color=\"{1}\">+{0}</color> ", dr.ManaChange[i], colors[i]);
+                        else
+                            sb.AppendFormat("<color=\"{1}\">{0}</color> ", dr.ManaChange[i], colors[i]);
+                    }
+                    sb.Append("\n");
+                });
+                manaCalcText.SetText(sb.ToString());
+                // clear buffer, format delta mana
+                sb.Clear();
+                for (int i = 0; i < deltaMana.Length; i++)
+                {
+                    if (deltaMana[i] >= 0)
+                        sb.AppendFormat("<color=\"{1}\">+{0}</color> ", deltaMana[i], colors[i]);
+                    else
+                        sb.AppendFormat("<color=\"{1}\">{0}</color> ", deltaMana[i], colors[i]);
+                }
+                manaSumText.SetText(sb.ToString());
+            }
+        }
+
+
+        /* TODO: immediateDamageRequest
+        /// <summary>
+        /// Processes a damage request immediatedly and directs execution to animation.
         /// </summary>
         /// <param name="damageRequest"></param>
         /// <returns>A string representative of source execution towards target, or fumble.</returns>
         public string ImmediateDamageRequest(DamageRequest damageRequest)
         {
-            if (damageRequest.target == null)
-            {
-                DLogger.LogError("No target in this damage request");
-            }
-            // TODO: process a damageRequest
-            // TODO: Defer animation and damageNumber data
-            return ZString.Format("{0} fumbled!", damageRequest.source.Name);
         }*/
     }
 }

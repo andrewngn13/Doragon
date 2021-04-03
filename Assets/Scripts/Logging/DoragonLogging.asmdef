@@ -1,9 +1,7 @@
 {
     "name": "DoragonLogging",
     "rootNamespace": "",
-    "references": [
-        "GUID:19622d0c1901810479006eab0c2d3555"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

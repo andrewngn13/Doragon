@@ -12,7 +12,7 @@ namespace Doragon.Battle
         {
             // TODO: spin this up from the scenemanager instead
             DLogger.Log("Spinning up debug battle");
-            BattleStartup battle = new BattleStartup();
+            BattleStartup battle = new BattleStartup("debug");
         }
     }
 }

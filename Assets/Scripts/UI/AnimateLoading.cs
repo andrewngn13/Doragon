@@ -18,7 +18,7 @@ namespace Doragon.UI
             await UniTask.Delay(fadeTime * 1000);
             var sequence = DOTween.Sequence();
             var tweener = loadingText.GetCharTweener();
-            // TODO: make this a global tween method
+            // TODO: make this a global tween method => bouncing text
             for (int i = 0; i <= loadingText.text.Length; ++i)
             {
                 var timeOffset = Mathf.Lerp(0, 1, (i) / (float)(loadingText.text.Length + 1));
