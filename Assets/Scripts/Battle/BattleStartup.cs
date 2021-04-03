@@ -15,13 +15,10 @@ namespace Doragon.Battle
             List<IBattleEntity> battleEntities = new List<IBattleEntity>();
             BattleEntityFactory factory = new BattleEntityFactory();
             // TODO: Make a data validator instead of sanitizing in all my methods
-            DLogger.Log("Producing a frontline VAN battle entity.");
+            DLogger.Log("Producing 3 frontline VAN {Nan, Kazan, Woolie} and 1 backline VAN {ADA}");
             battleEntities.Add(factory.Build("VAN", "Nan", true, true, 0));
-            DLogger.Log("Producing a frontline VAN battle entity.");
             battleEntities.Add(factory.Build("VAN", "Kazan", true, true, 1));
-            DLogger.Log("Producing a frontline VAN battle entity.");
             battleEntities.Add(factory.Build("VAN", "Woolie", true, true, 2));
-            DLogger.Log("Producing a backline VAN battle entity.");
             battleEntities.Add(factory.Build("VAN", "Ada", true, false, 0));
 
             // TODO: Instantiate models
