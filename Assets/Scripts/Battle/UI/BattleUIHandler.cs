@@ -1,4 +1,4 @@
-#define UNITASK_DOTWEEN_SUPPORT
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -22,13 +22,16 @@ namespace Doragon.Battle
         [SerializeField] private TargettingSystem targettingSystem;
         [SerializeField] private TextMeshProUGUI manaCalculations, manaSum;
         private DamageHandler damageHandler;
+        private List<Graphic> actionMenuGraphics;
         private List<BattleSlayerProfile> slayerProfiles = new List<BattleSlayerProfile>();
         private int slayerIterator = 0;
-        private const float slayerPortraitTweenTime = 0.3f;
+        private const int relativeDistance = -50;
+        private const float animateTime = 0.3f;
 
         private void Start()
         {
             roundConfirmPrompt.SetActive(false);
+            ShowActionMenu(false);
         }
 
         /// <summary>
@@ -36,7 +39,7 @@ namespace Doragon.Battle
         /// Setup the enemy collection and targetting system.
         /// </summary>
         /// <param name="slayerCollection"></param>
-        public void BattleUIHandlerInit(List<IBattleEntity> battleEntityCollection)
+        public async void BattleUIHandlerInit(List<IBattleEntity> battleEntityCollection)
         {
             damageHandler = new DamageHandler(new ManaLevels(manaLevelPanel), manaCalculations, manaSum);
             // TODO: data validator Run a test that checks that frontline exists, else force backline up to frontline
@@ -46,23 +49,16 @@ namespace Doragon.Battle
             FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && !s.FrontLine));
             Instantiate(lineDividerPrefab).transform.SetParent(slayerLayout, false);
             FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && s.FrontLine));
-            // set the first slayer
             SetSlayer(slayerIterator);
-            // add functionality to the back button
             backButton.onClick.AddListener(PrevSlayer);
             backButton.interactable = false;
-
-            // TODO: create battle sprites of slayers and enemies
-            // TODO: spawn offscreen and run in
-            foreach (var entity in battleEntityCollection)
-            {
-                BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
-                sprite.BattleTargettingSpriteInit(entity);
-                DLogger.Log(ZString.Format("Instantiating battle sprite of {0}", entity.Name));
-            }
+            SpawnBattleSprites(battleEntityCollection);
             // TODO: setup targetting
             TargettingSystem.GetAvailableTargets();
             SetNormalAttackListener();
+            actionMenuGraphics = actionMenu.GetComponentsInChildren<Graphic>().ToList();
+            ShowActionMenu(true);
+            await UniTask.CompletedTask;
         }
         /// <summary>
         /// Bind listener to Normal Attack button and await targetting. Pushes DamageRequest if target selected.
@@ -95,9 +91,11 @@ namespace Doragon.Battle
         private void FillSlayerLine(IEnumerable<IBattleEntity> slayerLine)
         {
             slayerLine.OrderBy(o => o.LineIndex);
+            var sb = ZString.CreateStringBuilder();
+            sb.Append("Instantiating slayer profile of ");
             foreach (var slayer in slayerLine)
             {
-                DLogger.Log(ZString.Format("Instantiating slayer profile of {0}", slayer.Name));
+                sb.Append(ZString.Format("{0}, ", slayer.Name));
                 var slayerPrefab = Instantiate(slayerProfilePrefab);
                 slayerPrefab.transform.SetParent(slayerLayout, false);
                 var slayerObj = slayerPrefab.GetComponent<BattleSlayerProfile>();
@@ -105,6 +103,8 @@ namespace Doragon.Battle
                 slayerObj.SelfBattleEntity = slayer;
                 slayerProfiles.Add(slayerObj);
             }
+            DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
+            sb.Dispose();
         }
 
         private async void SetSlayer(int slayerIndex)
@@ -112,13 +112,16 @@ namespace Doragon.Battle
             // TODO: make this a highlight instead
             slayerProfiles[slayerIndex].SetSelectableInteract(true);
             // TODO: make a pooling solution of the skills and portrait with disable/ enable instead of loading
-            // TODO: set slayer skills
+            // TODO: UI: method to load up the skill ui with the battle entities skills
+            // TODO: UI: Handle skill instantiation based on cast properties
+            // TODO: UI: Handle skill instantiation to UI
+            // TODO: UI: Handle skill targetting selection
             // TODO: check action role, do not set Primary skills if Auxiliary
-            ShowSlayerPortrait(false);
-            await UniTask.Delay(System.TimeSpan.FromSeconds(slayerPortraitTweenTime));
+            await AnimatedFadeInOutLeft(false);
+            
             // TODO: set portrait
             // await slayerPortrait.sprite =    Resources.LoadAsync  slayerProfiles[slayerIndex].SelfBattleEntity.Name
-            ShowSlayerPortrait(true);
+            await AnimatedFadeInOutLeft(true);
         }
         private void NextSlayer()
         {
@@ -191,17 +194,18 @@ namespace Doragon.Battle
         /// Hides or shows the Slayer menu
         /// </summary>
         /// <param name="showMenu"></param>
-        private void ShowActionMenu(bool showMenu)
+        private async void ShowActionMenu(bool showMenu)
         {
-            ShowSlayerPortrait(showMenu);
+            await AnimatedFadeInOutLeft(showMenu);
             slayerLayout.gameObject.SetActive(showMenu);
             actionMenu.SetActive(showMenu);
         }
 
-        private void ShowSlayerPortrait(bool showImage)
+        private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration=animateTime, int relDist=relativeDistance)
         {
-            slayerPortrait.transform.DOMoveX(showImage ? 0 : -50, slayerPortraitTweenTime);
-            slayerPortrait.DOFade(showImage ? 1 : 0, slayerPortraitTweenTime);
+            slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
+            slayerPortrait.DOFade(showImage ? 1 : 0, duration);
+            await UniTask.Delay(TimeSpan.FromSeconds(duration));
         }
 
         /// <summary> 
@@ -212,6 +216,22 @@ namespace Doragon.Battle
         private void SetInteractable(GameObject gameObject, bool enable)
         {
             gameObject.GetComponentsInChildren<Selectable>().ToList().ForEach(s => s.interactable = enable);
+        }
+
+        private void SpawnBattleSprites(ICollection<IBattleEntity> battleEntityCollection)
+        {
+            // TODO: create battle sprites of slayers and enemies
+            // TODO: spawn offscreen and run in
+            var sb = ZString.CreateStringBuilder();
+            sb.Append("Instantiating battle sprites of ");
+            foreach (var entity in battleEntityCollection)
+            {
+                BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
+                sprite.BattleTargettingSpriteInit(entity);
+                sb.Append(ZString.Format("{0}, ", entity.Name));
+            }
+            DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
+            sb.Dispose();
         }
     }
 }

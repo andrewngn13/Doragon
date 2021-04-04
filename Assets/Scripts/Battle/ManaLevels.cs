@@ -21,6 +21,7 @@ namespace Doragon.Battle
                 DLogger.LogWarning("No manaPanel object, are we editor testing?");
                 return;
             }
+            // TODO: a smarter slimmer way to get all of these references
             var imageArray = manaPanel.GetComponentsInChildren<Image>();
             var tmproArray = manaPanel.GetComponentsInChildren<TextMeshProUGUI>();
             redBar = imageArray[0];

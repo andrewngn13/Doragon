@@ -41,7 +41,7 @@ namespace Doragon.Battle
         /// <param name="matk"></param>
         /// <param name="mdef"></param>
         /// <param name="spd"></param>
-        // TODO: Consideration, change myTeam to a userID if networking ever happens
+        // TODO? change myTeam to a userID if networking ever happens
         protected IBattleEntity(bool team, bool combatline, int lineIndex, string formalName, ManaType manaType, DamageType normalDamageType,
             int hp, int atk, int def, int matk, int mdef, int spd)
         {

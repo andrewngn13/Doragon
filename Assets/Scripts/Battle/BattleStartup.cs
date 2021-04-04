@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Doragon.Logging;
 using Doragon.Extensions;
+using Cysharp.Threading.Tasks;
 
 namespace Doragon.Battle
 {
@@ -16,26 +17,23 @@ namespace Doragon.Battle
         {
             List<IBattleEntity> battleEntities = new List<IBattleEntity>();
             BattleEntityFactory factory = new BattleEntityFactory();
-            DLogger.Log("Producing 3 frontline VAN {Nan, Kazan, Woolie} and 1 backline VAN {ADA}");
+            DLogger.Log("Producing 3 player frontline VAN {Nan, Kazan, Woolie} and 1 backline VAN {ADA}");
             battleEntities.Add(factory.Build("VAN", "Nan", true, true, 0));
             battleEntities.Add(factory.Build("VAN", "Kazan", true, true, 1));
             battleEntities.Add(factory.Build("VAN", "Woolie", true, true, 2));
             battleEntities.Add(factory.Build("VAN", "Ada", true, false, 0));
+            DLogger.Log("Producing 1 enemy frontline VAN {Doragon}");
+            battleEntities.Add(factory.Build("VAN", "Doragon", false, true, 0));
 
             if (!ValidateTeam(battleEntities.Where(e => e.MyTeam)))
                 throw new System.ArgumentException("My team battle entities are not valid for use");
             if (!ValidateTeam(battleEntities.Where(e => !e.MyTeam)))
                 throw new System.ArgumentException("Enemy battle entities are not valid for use");
             DLogger.Log("Entities validated");
-            // TODO: Instantiate models
             var handler = GameObject.FindObjectOfType<BattleUIHandler>();
             DLogger.Log("Setting up UI components: Slayer profiles, Slayer sprites, enemy sprites");
             DLogger.LogWarning("TODO UI components: Skill viewer");
             handler.BattleUIHandlerInit(battleEntities);
-            // TODO: UI: method to load up the skill ui with the battle entities skills
-            // TODO: UI: Handle skill instantiation based on cast properties
-            // TODO: UI: Handle skill instantiation to UI
-            // TODO: UI: Handle skill targetting selection
             // TODO: start a laptimer
         }
         // TODO: an actual production worthy constructor for battle startup
