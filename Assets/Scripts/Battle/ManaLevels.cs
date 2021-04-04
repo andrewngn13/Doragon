@@ -16,6 +16,11 @@ namespace Doragon.Battle
         // TODO: add abnormal starting mana, and abnormal adjustment
         public ManaLevels(GameObject manaPanel)
         {
+            if (manaPanel == null)
+            {
+                DLogger.LogWarning("No manaPanel object, are we editor testing?");
+                return;
+            }
             var imageArray = manaPanel.GetComponentsInChildren<Image>();
             var tmproArray = manaPanel.GetComponentsInChildren<TextMeshProUGUI>();
             redBar = imageArray[0];

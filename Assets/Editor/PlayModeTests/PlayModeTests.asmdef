@@ -6,11 +6,10 @@
         "UnityEditor.TestRunner",
         "UniTask",
         "DoragonBattle",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "DoragonUI"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

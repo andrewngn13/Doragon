@@ -5,6 +5,7 @@ using Doragon.Logging;
 
 namespace Doragon.UI
 {
+    [RequireComponent(typeof(Canvas))]
     /// <summary> Instanced singleton on application startup that allows async scene transition alongside animated loading UI.
     public class SceneManager : MonoBehaviour
     {
@@ -17,7 +18,7 @@ namespace Doragon.UI
             if (!instanced)
             {
                 instanced = true;
-                loadingPrefabCanvas = Instantiate(LoadingPrefab).GetComponent<Canvas>();
+                loadingPrefabCanvas = GetComponent<Canvas>();
                 loadingPrefabCanvas.enabled = false;
                 animateLoader = loadingPrefabCanvas.GetComponent<AnimateLoading>();
                 DontDestroyOnLoad(this);
@@ -30,7 +31,7 @@ namespace Doragon.UI
         }
 
         /// <summary> Loads singular scene asynchronously and displays UI loading prefab during load
-        public async void LoadSceneAsync(string sceneName)
+        public async UniTask LoadSceneAsync(string sceneName)
         {
             if (loading) return;
             loading = true;

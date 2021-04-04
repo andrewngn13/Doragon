@@ -24,7 +24,7 @@ namespace Doragon.Battle
         private DamageHandler damageHandler;
         private List<BattleSlayerProfile> slayerProfiles = new List<BattleSlayerProfile>();
         private int slayerIterator = 0;
-        private const float slayerPortraitTweenTime = 0.5f;
+        private const float slayerPortraitTweenTime = 0.3f;
 
         private void Start()
         {
@@ -94,11 +94,6 @@ namespace Doragon.Battle
         /// <param name="slayerLine"></param>
         private void FillSlayerLine(IEnumerable<IBattleEntity> slayerLine)
         {
-            // TODO: remove this check after we make a data validator
-            int distinctByLineIndexCount = slayerLine.DistinctBy(s => s.LineIndex).Count();
-            if (distinctByLineIndexCount != slayerLine.Count())
-                throw new System.ArgumentException("Element with duplicate lineIndex property found");
-            //
             slayerLine.OrderBy(o => o.LineIndex);
             foreach (var slayer in slayerLine)
             {
@@ -151,7 +146,7 @@ namespace Doragon.Battle
             if (slayerIterator > 0)
             {
                 if (slayerIterator == 1)
-                    backButton.interactable = true;
+                    backButton.interactable = false;
                 damageHandler.PopDamageRequest();
                 slayerProfiles[slayerIterator].SetSelectableInteract(false);
                 SetSlayer(--slayerIterator);
@@ -205,8 +200,8 @@ namespace Doragon.Battle
 
         private void ShowSlayerPortrait(bool showImage)
         {
-            slayerPortrait.transform.DOMoveX(showImage ? 0 : -100, slayerPortraitTweenTime);
-            slayerPortrait.DOFade(showImage ? 1 : 0, slayerPortraitTweenTime / 2);
+            slayerPortrait.transform.DOMoveX(showImage ? 0 : -50, slayerPortraitTweenTime);
+            slayerPortrait.DOFade(showImage ? 1 : 0, slayerPortraitTweenTime);
         }
 
         /// <summary> 
