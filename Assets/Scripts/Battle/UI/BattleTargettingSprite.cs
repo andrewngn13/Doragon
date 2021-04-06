@@ -11,6 +11,7 @@ namespace Doragon.Battle
         [SerializeField] private SpriteRenderer hpBarHighlight;
         [SerializeField] private SpriteRenderer hpBar;
         public IBattleEntity selfBattleEntity { get; set; }
+        public bool canTarget = false;
 
         // call pseudo constructor after monobehavior instantiation
         public void BattleTargettingSpriteInit(IBattleEntity self)
@@ -26,7 +27,7 @@ namespace Doragon.Battle
         {
             DLogger.Log(ZString.Format("{0} sprite clicked", selfBattleEntity.Name));
             var targetSys = GameObject.FindObjectOfType<TargettingSystem>();
-            if (targetSys.targettingOpen)
+            if (canTarget)
                 targetSys.SetPrimaryTarget(this);
             return this;
         }

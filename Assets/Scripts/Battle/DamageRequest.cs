@@ -3,6 +3,7 @@ namespace Doragon.Battle
 {
     public struct DamageRequest
     {
+        public bool TargettingMyTeam { get; }
         public ActionRole actionRole { get; }
         DamageType damageTyping { get; }
         ManaType manaTyping { get; }
@@ -12,8 +13,9 @@ namespace Doragon.Battle
         int priority { get; }
         public IBattleEntity source { get; }
         public Targets target { get; set; }
-        public DamageRequest(ActionRole role, DamageType damageType, ManaType manaType, TargettingType targetType, int[] manaChange, float damageModifier, int movePriority, IBattleEntity src, Targets tar)
+        public DamageRequest(bool myTeam,ActionRole role, DamageType damageType, ManaType manaType, TargettingType targetType, int[] manaChange, float damageModifier, int movePriority, IBattleEntity src, Targets tar)
         {
+            TargettingMyTeam = myTeam;
             actionRole = role;
             damageTyping = damageType;
             manaTyping = manaType;

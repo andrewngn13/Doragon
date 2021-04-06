@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using Doragon.Extensions;
 using Doragon.Logging;
 using Cysharp.Text;
 using Cysharp.Threading.Tasks;
@@ -27,6 +25,7 @@ namespace Doragon.Battle
         private int slayerIterator = 0;
         private const int relativeDistance = -50;
         private const float animateTime = 0.3f;
+        private const int OffscreenOffset = 15;
 
         private void Start()
         {
@@ -48,39 +47,37 @@ namespace Doragon.Battle
             FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && s.FrontLine));
 
             SetSlayer(slayerIterator);
-            SetNormalAttackListener();
+            normalAttackButton.onClick.AddListener(SetNormalAttackListener);
             backButton.onClick.AddListener(PrevSlayer);
             SpawnBattleSprites(battleEntityCollection);
             actionMenuGraphics = actionMenu.GetComponentsInChildren<Graphic>().ToList();
             ShowActionMenu(true);
+            slayerPortrait.gameObject.SetActive(false);
             await UniTask.CompletedTask;
         }
         /// <summary>
         /// Bind listener to Normal Attack button and await targetting. Pushes DamageRequest if target selected.
         /// </summary>
-        private void SetNormalAttackListener()
+        private async void SetNormalAttackListener()
         {
-            normalAttackButton.onClick.AddListener(async () =>
+            SetInteractable(actionMenu, false);
+            DamageRequest request = slayerProfiles[slayerIterator].SelfBattleEntity.NormalAttack();
+            Targets target = await targettingSystem.ConfirmUserTargets(request.TargettingMyTeam, request.actionRole, request.TargetTyping);
+            if (target == null)
             {
-                SetInteractable(actionMenu, false);
-                DamageRequest request = slayerProfiles[slayerIterator].SelfBattleEntity.NormalAttack();
-                Targets target = await targettingSystem.ConfirmUserTargets(request.actionRole, request.TargetTyping);
-                if (target == null)
-                {
-                    DLogger.Log("No target selected, cancelling targetting");
-                    SetInteractable(actionMenu, true);
-                }
-                else
-                {
-                    request.target = targettingSystem.GetFinalTarget();
-                    DLogger.Log(ZString.Format("{0} selected for targetting", request.target.PrimaryTarget.Name));
-                    damageHandler.PushDamageRequest(request);
-                    damageHandler.damageRequests.ToList().ForEach(s =>
-                        DLogger.Log(ZString.Format("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name)));
-                    NextSlayer();
-                    SetInteractable(actionMenu, true);
-                }
-            });
+                DLogger.Log("No target selected, cancelling targetting");
+                SetInteractable(actionMenu, true);
+            }
+            else
+            {
+                request.target = targettingSystem.GetFinalTarget();
+                DLogger.Log(ZString.Format("{0} selected for targetting", request.target.PrimaryTarget.Name));
+                damageHandler.PushDamageRequest(request);
+                damageHandler.damageRequests.ToList().ForEach(s =>
+                    DLogger.Log(ZString.Format("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name)));
+                NextSlayer();
+                SetInteractable(actionMenu, true);
+            }
         }
         /// <summary>
         /// Fills the <see cref="slayerLayout"> with <see cref="slayerProfilePrefab"> according to line.
@@ -201,8 +198,8 @@ namespace Doragon.Battle
         private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration = animateTime, int relDist = relativeDistance)
         {
             var doMove = slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
-            await slayerPortrait.DOFade(showImage ? 1 : 0, duration);
-            // await UniTask.Delay(TimeSpan.FromSeconds(duration));
+            // TODO: do i need slayer portrait? => interferes with battle sprites
+            // await slayerPortrait.DOFade(showImage ? 1 : 0, duration);
         }
 
         /// <summary> 
@@ -218,17 +215,45 @@ namespace Doragon.Battle
         private void SpawnBattleSprites(ICollection<IBattleEntity> battleEntityCollection)
         {
             // TODO: create battle sprites of slayers and enemies
-            // TODO: spawn offscreen and run in
+            // TODO: spawn offscreen and run in animation
+            List<BattleTargettingSprite> spriteTransforms = new List<BattleTargettingSprite>();
             var sb = ZString.CreateStringBuilder();
             sb.Append("Instantiating battle sprites of ");
             foreach (var entity in battleEntityCollection)
             {
                 BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
                 sprite.BattleTargettingSpriteInit(entity);
+                sprite.GetComponent<SpriteRenderer>().sortingOrder = sprite.selfBattleEntity.LineIndex;
+                spriteTransforms.Add(sprite);
+
+                // TODO: sprite screen spawning location
+                if (entity.MyTeam)
+                {
+                    sprite.transform.position = new Vector3(
+                        -OffscreenOffset - entity.LineIndex - (!entity.FrontLine ? 4 : 0),
+                         1 - entity.LineIndex, 0);
+                }
+                else
+                {
+                    sprite.transform.position = new Vector3(
+                        OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? -4 : 0),
+                         1 - entity.LineIndex, 0);
+                }
                 sb.Append(ZString.Format("{0}, ", entity.Name));
             }
+            spriteTransforms.ForEach(t =>
+            {
+                if (t.selfBattleEntity.MyTeam)
+                    t.transform.DOMoveX(t.transform.position.x + OffscreenOffset * 0.9f, animateTime * 8);
+                else
+                {
+                    t.transform.DOMoveX(t.transform.position.x - OffscreenOffset * 0.9f, animateTime * 8);
+                    t.transform.eulerAngles = new Vector3(0, 180, 0);
+                }
+            });
             DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
             sb.Dispose();
+
         }
     }
 }

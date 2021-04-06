@@ -25,7 +25,7 @@ public class DamageHandlerTest
         enemyFrontliner = factory.Build("VAN", "Ban", true, true, 0);
         enemyBackliner = factory.Build("VAN", "Dan", true, true, 0);
 
-        nanSource = new DamageRequest(ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, new Targets { PrimaryTarget = vanguard });
+        nanSource = new DamageRequest(false, ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, new Targets { PrimaryTarget = vanguard });
     }
 
     [TearDown]

@@ -16,7 +16,6 @@ namespace Doragon.Battle
         [SerializeField] private Button confirmOK;
         [SerializeField] private Button cancel;
         public Targets targetBuffer = new Targets();
-        public bool targettingOpen = false;
         private void Start()
         {
             confirmOK.gameObject.SetActive(false);
@@ -24,7 +23,7 @@ namespace Doragon.Battle
         }
         // TODO: figure out some data structure for group positioning of ice pierce and fire splash
         /// <summary>
-        /// Sets available targetting list for auto targetting to any found BattleTargettingSprites
+        /// Returns a list of any BattleTargettingSprite found on Unity objects in scene
         /// </summary>
         /// <returns></returns>
         public List<BattleTargettingSprite> GetAvailableTargets()
@@ -43,19 +42,19 @@ namespace Doragon.Battle
         /// </summary>
         /// <returns></returns>
         // TODO: restrict the available trgets according to targettingType
-        public async UniTask<Targets> ConfirmUserTargets(ActionRole combatLine, TargettingType targetType)
+        public async UniTask<Targets> ConfirmUserTargets(bool myTeam, ActionRole actionRole, TargettingType targetType)
         {
             var availTargets = GetAvailableTargets();
             availTargets.ForEach(t => t.EnableHpBar(true));
-            SelectAvailableTarget(targetType, true);
+            SelectAvailableTarget(myTeam, actionRole, targetType, true);
             confirmOK.gameObject.SetActive(true);
             cancel.gameObject.SetActive(true);
             int cancelorConfirm = await UniTask.WhenAny(cancel.OnClickAsync(), confirmOK.OnClickAsync());
             confirmOK.gameObject.SetActive(false);
             cancel.gameObject.SetActive(false);
-            targettingOpen = false;
             availTargets.ForEach(t =>
             {
+                t.canTarget = false;
                 t.EnableHpBar(false);
                 t.Highlight(false);
             });
@@ -73,13 +72,16 @@ namespace Doragon.Battle
         /// Finds an available target according to targetType. Sets the Targets targetBuffer to this target(s).
         /// </summary>
         /// <param name="targetType"></param>
-        public Targets SelectAvailableTarget(TargettingType targetType, bool openTargets)
+        public Targets SelectAvailableTarget(bool myTeam, ActionRole actionRole, TargettingType targetType, bool openTargets)
         {
-            var availTargets = GetAvailableTargets();
+            var availTargets = GetAvailableTargets().Where(t => t.selfBattleEntity.MyTeam == myTeam).ToList();
             // TODO: what if there are no targets?
             // TODO: Get proper targettingType
-            targettingOpen = openTargets;
-            // TODO: skip switch if no availTarget
+            // TODO: fix actionRole targetting
+            availTargets.ForEach(t => t.canTarget = true);
+
+            if (availTargets.Count() == 0)
+                return null;
             switch (targetType)
             {
                 case TargettingType.Single:

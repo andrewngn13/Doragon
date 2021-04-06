@@ -116,7 +116,7 @@ namespace Doragon.Battle
                 {
                     DLogger.LogWarning("IsDead triggered, replacing target!");
                     // replace the target! if we cant replace the target, fumble!
-                    var newTarget = targetSys.SelectAvailableTarget(r.TargetTyping, false);
+                    var newTarget = targetSys.SelectAvailableTarget(r.TargettingMyTeam, r.actionRole, r.TargetTyping, false);
                     if (newTarget == null)
                     {
                         DLogger.Log(ZString.Format("{0} fumbled with no target!", r.source.Name));
@@ -145,11 +145,18 @@ namespace Doragon.Battle
                 // TODO: deathchecking
                 if (targetWrapper.PrimaryTarget.HP <= 0)
                 {
-                    UnityEngine.GameObject.Destroy(UnityEngine.GameObject.FindObjectOfType<TargettingSystem>().GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
-                    DLogger.Log(ZString.Format("{0} has been destroyed", r.target.PrimaryTarget.Name));
+                    UnityEngine.GameObject.Destroy(targetSys.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
+                    await UniTask.NextFrame();
+                    DLogger.Log(ZString.Format("{0} has been destroyed", targetWrapper.PrimaryTarget.Name));
+                    // TODO: Win condition
+                    if (targetSys.GetAvailableTargets().Where(t => !t.selfBattleEntity.MyTeam).Count() == 0)
+                    {
+                        DLogger.Log("The fight is won");
+                        break;
+                    }
                 }
                 else
-                    DLogger.Log(ZString.Format("{0} has {1} HP now", r.target.PrimaryTarget.Name, r.target.PrimaryTarget.HP));
+                    DLogger.Log(ZString.Format("{0} has {1} HP now", targetWrapper.PrimaryTarget.Name, r.target.PrimaryTarget.HP));
                 // more details about death: must darken a dead slayer frame, must death animate target sprites, 
                 // remove any damageRequests with them as the source
                 // must update BattleUIHandlers collection of Battle profiles so dead ones are skipped

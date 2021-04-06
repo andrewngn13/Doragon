@@ -2462,6 +2462,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   confirmOK: {fileID: 1937142894}
   cancel: {fileID: 1677335785}
+  targettingOpen: 0
 --- !u!4 &564338038
 Transform:
   m_ObjectHideFlags: 0
