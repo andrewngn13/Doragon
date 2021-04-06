@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace Doragon.Battle
@@ -80,5 +81,8 @@ namespace Doragon.Battle
             // TODO: fix normal attacks
             return new DamageRequest(ActionRole.Auxiliary, normalDamageTyping, manaTyping, TargettingType.Single, new int[4] { 1, -1, 2, -2 }, 1f, 0, this, null);
         }
+
+        public abstract List<DamageRequest> GetSkills();
+
     }
 }

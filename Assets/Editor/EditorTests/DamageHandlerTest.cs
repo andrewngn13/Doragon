@@ -63,7 +63,6 @@ public class DamageHandlerTest
     public void PushRequest()
     {
         damageHandler.PushDamageRequest(nanSource);
-
     }
 
     /// <summary>
