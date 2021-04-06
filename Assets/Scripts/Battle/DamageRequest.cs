@@ -11,8 +11,8 @@ namespace Doragon.Battle
         float damageMod { get; }
         int priority { get; }
         public IBattleEntity source { get; }
-        public IBattleEntity target { get; set; }
-        public DamageRequest(ActionRole role, DamageType damageType, ManaType manaType, TargettingType targetType, int[] manaChange, float damageModifier, int movePriority, IBattleEntity src, IBattleEntity tar)
+        public Targets target { get; set; }
+        public DamageRequest(ActionRole role, DamageType damageType, ManaType manaType, TargettingType targetType, int[] manaChange, float damageModifier, int movePriority, IBattleEntity src, Targets tar)
         {
             actionRole = role;
             damageTyping = damageType;

@@ -15,29 +15,37 @@ namespace Doragon.Battle
     {
         [SerializeField] private Button confirmOK;
         [SerializeField] private Button cancel;
-        private static List<BattleTargettingSprite> availTargets;
-        private static Targets targetBuffer = new Targets();
-        // TODO: restrict the available trgets according to targettingType
-        private static TargettingType targettingType;
-        public static bool targettingOpen = false;
+        public Targets targetBuffer = new Targets();
+        public bool targettingOpen = false;
         private void Start()
         {
             confirmOK.gameObject.SetActive(false);
             cancel.gameObject.SetActive(false);
         }
         // TODO: figure out some data structure for group positioning of ice pierce and fire splash
-        public static List<BattleTargettingSprite> GetAvailableTargets()
+        /// <summary>
+        /// Sets available targetting list for auto targetting to any found BattleTargettingSprites
+        /// </summary>
+        /// <returns></returns>
+        public List<BattleTargettingSprite> GetAvailableTargets()
         {
-            var availTargetlist = GameObject.FindObjectsOfType<BattleTargettingSprite>().ToList();
-            availTargets = availTargetlist;
-            return availTargets;
+            return GameObject.FindObjectsOfType<BattleTargettingSprite>().ToList();
+        }
+
+        public bool IsDead(IBattleEntity target)
+        {
+            if (GetAvailableTargets().Where(tsprite => tsprite.selfBattleEntity == target).Count() == 0)
+                return true;
+            return false;
         }
         /// <summary>
         /// Attached to the confirm and cancel button. Returns the targets to be attacked from targetBuffer. Null if cancelled.
         /// </summary>
         /// <returns></returns>
+        // TODO: restrict the available trgets according to targettingType
         public async UniTask<Targets> ConfirmUserTargets(ActionRole combatLine, TargettingType targetType)
         {
+            var availTargets = GetAvailableTargets();
             availTargets.ForEach(t => t.EnableHpBar(true));
             SelectAvailableTarget(targetType, true);
             confirmOK.gameObject.SetActive(true);
@@ -55,15 +63,23 @@ namespace Doragon.Battle
                 return null;
             return targetBuffer;
         }
+        public Targets GetFinalTarget()
+        {
+            Targets finalTarget = targetBuffer;
+            targetBuffer = new Targets();
+            return finalTarget;
+        }
         /// <summary>
         /// Finds an available target according to targetType. Sets the Targets targetBuffer to this target(s).
         /// </summary>
         /// <param name="targetType"></param>
-        private void SelectAvailableTarget(TargettingType targetType, bool openTargets)
+        public Targets SelectAvailableTarget(TargettingType targetType, bool openTargets)
         {
+            var availTargets = GetAvailableTargets();
             // TODO: what if there are no targets?
             // TODO: Get proper targettingType
             targettingOpen = openTargets;
+            // TODO: skip switch if no availTarget
             switch (targetType)
             {
                 case TargettingType.Single:
@@ -74,12 +90,13 @@ namespace Doragon.Battle
                     // splash
                     // all
             }
+            return targetBuffer;
         }
         /// <summary>
         /// Fired from OnClick of <see cref="BattleTargettingSprite">. Sets the Targets targetBuffer to this target(s).
         /// </summary>
         /// <param name="target"></param>
-        public static void SetPrimaryTarget(BattleTargettingSprite target)
+        public void SetPrimaryTarget(BattleTargettingSprite target)
         {
             targetBuffer.PrimaryTarget = target.selfBattleEntity;
             // TODO: figure out query for additional targets
@@ -92,9 +109,9 @@ namespace Doragon.Battle
         /// </summary>
         /// <param name="primary"></param>
         /// <param name="aux"></param>
-        private static void HighlightTargets(BattleTargettingSprite primary, List<BattleTargettingSprite> aux = null)
+        private void HighlightTargets(BattleTargettingSprite primary, List<BattleTargettingSprite> aux = null)
         {
-            foreach (var t in availTargets)
+            foreach (var t in GetAvailableTargets())
                 t.Highlight(false);
             primary.Highlight(true);
             if (aux != null)

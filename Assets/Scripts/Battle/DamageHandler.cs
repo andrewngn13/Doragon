@@ -34,7 +34,7 @@ namespace Doragon.Battle
         private TurnType turnTyping;
         private TextMeshProUGUI manaCalc, manaSum;
         private readonly string[] colors = { "red", "green", "blue", "purple" };
-        private Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
+        public Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
         private Random rand = new Random();
 
         public DamageHandler(ManaLevels manaLevels, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText, TurnType turnType = TurnType.COMMAND)
@@ -92,54 +92,67 @@ namespace Doragon.Battle
                 throw new System.IndexOutOfRangeException("DamageRequest stack is empty or out of bounds");
             // TODO: Modularize speed calculations for easier testing / tweaking
             // we create a new sorted by speed list of requests
-            var sortedRequests = damageRequests.ToList<DamageRequest>().OrderByDescending(s => s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod));
-            sortedRequests.ToList().ForEach(s => DLogger.Log(ZString.Format("{0}: {1}", s.source.Name, s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod))));
             var sb = ZString.CreateStringBuilder();
-            sb.Append("Round Order: ");
-            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}, ", s.source.Name));
+            var sortedRequests = damageRequests.ToList<DamageRequest>().OrderByDescending(s => s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod));
+            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}: {1}, ", s.source.Name, s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod)));
+            sb.Append("\nRound Order: ");
+            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name));
             DLogger.Log(sb.ToString());
             sb.Dispose();
             //
 
             foreach (var r in sortedRequests)
             {
+                Targets targetWrapper = r.target;
                 // TODO: Add auto target selection when main target cannot be selected
-                if (TargettingSystem.GetAvailableTargets().Where(tsprite => tsprite.selfBattleEntity == r.target).Count() == 0)
-                {
-                    throw new System.Exception("Target is already dead!");
-                }
                 DLogger.LogWarning("Fake animation sequence of 3 seconds");
+
                 await UniTask.Delay(TimeSpan.FromSeconds(3));
+                var targetSys = UnityEngine.GameObject.FindObjectOfType<TargettingSystem>();
+                if (targetSys.IsDead(targetWrapper.PrimaryTarget))
+                {
+                    DLogger.LogWarning("IsDead triggered, replacing target!");
+                    // replace the target! if we cant replace the target, fumble!
+                    var newTarget = targetSys.SelectAvailableTarget(r.TargetTyping, false);
+                    if (newTarget == null)
+                    {
+                        DLogger.Log(ZString.Format("{0} fumbled with no target!", r.source.Name));
+                        continue;
+                    }
+                    else
+                    {
+                        targetWrapper = newTarget;
+                    }
+                }
                 // TODO: fumbled if not enough mana
                 if (!manaLevel.AddMana(r.ManaChange))
                 {
-                    // return ZString.Format("{0} fumbled!", damageRequest.source.Name);
-                    DLogger.Log("Action has fumbled!");
-                    manaLevel.AnimateMana();
+                    DLogger.Log(ZString.Format("{0} fumbled from no mana!", r.source.Name));
                     // TODO: fumble animation?
                     continue;
                 }
                 // TODO: attach damage to a projectile or animation hit
-                r.target.HP -= 5;
+                // TODO: animate the hp bar
+                targetWrapper.PrimaryTarget.HP -= 5;
                 manaLevel.AnimateMana();
                 // TODO: output action to the log
                 // TODO: more involved damage, buffing, and debuffing
                 // TODO: damage formula
 
                 // TODO: deathchecking
-                if (r.target.HP <= 0)
+                if (targetWrapper.PrimaryTarget.HP <= 0)
                 {
-                    
-                    UnityEngine.GameObject.Destroy(TargettingSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == r.target).gameObject);
-                    DLogger.Log("Battle entity destroyed");
+                    UnityEngine.GameObject.Destroy(UnityEngine.GameObject.FindObjectOfType<TargettingSystem>().GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
+                    DLogger.Log(ZString.Format("{0} has been destroyed", r.target.PrimaryTarget.Name));
                 }
-                // more details about death: must darken a dead slayer, must death animate target sprites, 
+                else
+                    DLogger.Log(ZString.Format("{0} has {1} HP now", r.target.PrimaryTarget.Name, r.target.PrimaryTarget.HP));
+                // more details about death: must darken a dead slayer frame, must death animate target sprites, 
+                // remove any damageRequests with them as the source
                 // must update BattleUIHandlers collection of Battle profiles so dead ones are skipped
                 // reset targetting system available data with GetAvailableTargets
                 // ??? can we revive. sounds complicated.
                 // would have to not dispose of slayer targetting sprites / myTeam property
-
-                DLogger.Log(ZString.Format("{0} has {1} HP now", r.target.Name, r.target.HP));
             }
             // clear the stack
             damageRequests.Clear();

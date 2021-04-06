@@ -78,7 +78,7 @@ namespace Doragon.Battle
         public DamageRequest NormalAttack()
         {
             // TODO: fix normal attacks
-            return new DamageRequest(ActionRole.Auxiliary, normalDamageTyping, manaTyping, TargettingType.Single, new int[4] { 1, -10, 2, -2 }, 1f, 0, this, null);
+            return new DamageRequest(ActionRole.Auxiliary, normalDamageTyping, manaTyping, TargettingType.Single, new int[4] { 1, -1, 2, -2 }, 1f, 0, this, null);
         }
     }
 }

@@ -15,9 +15,10 @@ namespace Doragon.Battle
         public Vanguard(bool team, bool frontline, int lineIndex, string formalName, ManaType manaType, DamageType damageType, int hp, int atk, int def, int matk, int mdef, int spd)
         : base(team, frontline, lineIndex, formalName, manaType, damageType, hp, atk, def, matk, mdef, spd) { }
 
-        // TODO: basic skill quickslash
-        public void QuickSlash()
+        // TODO: Provoke => buff to self that increases AI aggro
+        public void Provoke()
         {
+            
         }
     }
 }

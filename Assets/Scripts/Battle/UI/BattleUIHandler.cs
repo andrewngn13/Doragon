@@ -42,20 +42,15 @@ namespace Doragon.Battle
         public async void BattleUIHandlerInit(List<IBattleEntity> battleEntityCollection)
         {
             damageHandler = new DamageHandler(new ManaLevels(manaLevelPanel), manaCalculations, manaSum);
-            // TODO: data validator Run a test that checks that frontline exists, else force backline up to frontline
-            // TODO: data validator Run a test that checks maximum 3 frontline or 3 backline
-
             // filled left to right, backline, line divider, frontline. slayerProfile list is filled upon finish
             FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && !s.FrontLine));
             Instantiate(lineDividerPrefab).transform.SetParent(slayerLayout, false);
             FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && s.FrontLine));
+
             SetSlayer(slayerIterator);
-            backButton.onClick.AddListener(PrevSlayer);
-            backButton.interactable = false;
-            SpawnBattleSprites(battleEntityCollection);
-            // TODO: setup targetting
-            TargettingSystem.GetAvailableTargets();
             SetNormalAttackListener();
+            backButton.onClick.AddListener(PrevSlayer);
+            SpawnBattleSprites(battleEntityCollection);
             actionMenuGraphics = actionMenu.GetComponentsInChildren<Graphic>().ToList();
             ShowActionMenu(true);
             await UniTask.CompletedTask;
@@ -77,8 +72,11 @@ namespace Doragon.Battle
                 }
                 else
                 {
-                    request.target = target.PrimaryTarget;
+                    request.target = targettingSystem.GetFinalTarget();
+                    DLogger.Log(ZString.Format("{0} selected for targetting", request.target.PrimaryTarget.Name));
                     damageHandler.PushDamageRequest(request);
+                    damageHandler.damageRequests.ToList().ForEach(s =>
+                        DLogger.Log(ZString.Format("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name)));
                     NextSlayer();
                     SetInteractable(actionMenu, true);
                 }
@@ -109,6 +107,8 @@ namespace Doragon.Battle
 
         private async void SetSlayer(int slayerIndex)
         {
+            if (slayerIterator == 0)
+                backButton.interactable = false;
             // TODO: make this a highlight instead
             slayerProfiles[slayerIndex].SetSelectableInteract(true);
             // TODO: make a pooling solution of the skills and portrait with disable/ enable instead of loading
@@ -118,7 +118,7 @@ namespace Doragon.Battle
             // TODO: UI: Handle skill targetting selection
             // TODO: check action role, do not set Primary skills if Auxiliary
             await AnimatedFadeInOutLeft(false);
-            
+
             // TODO: set portrait
             // await slayerPortrait.sprite =    Resources.LoadAsync  slayerProfiles[slayerIndex].SelfBattleEntity.Name
             await AnimatedFadeInOutLeft(true);
@@ -148,8 +148,6 @@ namespace Doragon.Battle
         {
             if (slayerIterator > 0)
             {
-                if (slayerIterator == 1)
-                    backButton.interactable = false;
                 damageHandler.PopDamageRequest();
                 slayerProfiles[slayerIterator].SetSelectableInteract(false);
                 SetSlayer(--slayerIterator);
@@ -177,7 +175,6 @@ namespace Doragon.Battle
                 manaSum.transform.parent.gameObject.SetActive(false);
                 manaCalculations.SetText("");
                 manaSum.SetText("");
-
                 await damageHandler.ProcessDamageRequests();
 
                 // TODO: reset framing of uiinputhandler back to the first slayer
@@ -201,7 +198,7 @@ namespace Doragon.Battle
             actionMenu.SetActive(showMenu);
         }
 
-        private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration=animateTime, int relDist=relativeDistance)
+        private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration = animateTime, int relDist = relativeDistance)
         {
             slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
             slayerPortrait.DOFade(showImage ? 1 : 0, duration);

@@ -21,16 +21,14 @@ namespace Doragon.Battle
         }
 
         // send message upwards to disable highlighting on others
-        // only allow when targetting is open
+        // only set target when targetting is open
         public BattleTargettingSprite OnMouseDown()
         {
-            if (TargettingSystem.targettingOpen)
-            {
-                DLogger.Log(ZString.Format("{0} sprite clicked", selfBattleEntity.Name));
-                TargettingSystem.SetPrimaryTarget(this);
-                return this;
-            }
-            return null;
+            DLogger.Log(ZString.Format("{0} sprite clicked", selfBattleEntity.Name));
+            var targetSys = GameObject.FindObjectOfType<TargettingSystem>();
+            if (targetSys.targettingOpen)
+                targetSys.SetPrimaryTarget(this);
+            return this;
         }
         public void EnableHpBar(bool enable)
         {

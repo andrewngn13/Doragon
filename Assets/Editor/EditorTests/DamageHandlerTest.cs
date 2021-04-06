@@ -16,7 +16,6 @@ public class DamageHandlerTest
     {
         manaCalc = new GameObject().AddComponent<TextMeshProUGUI>();
         manaSum = new GameObject().AddComponent<TextMeshProUGUI>();
-        // TODO: fix null manalevel
         damageHandler = new DamageHandler(new ManaLevels(null), manaCalc, manaSum);
         BattleEntityFactory factory = new BattleEntityFactory();
         vanguard = factory.Build("VAN", "Nan", true, true, 0);
@@ -25,7 +24,7 @@ public class DamageHandlerTest
     [TearDown]
     public void TearDown()
     {
-        damageHandler = new DamageHandler(new ManaLevels(null),manaCalc, manaSum);
+        damageHandler = new DamageHandler(new ManaLevels(null), manaCalc, manaSum);
     }
 
     /// <summary>
@@ -44,7 +43,7 @@ public class DamageHandlerTest
     public void PushRequest()
     {
         damageHandler.PushDamageRequest(
-            new DamageRequest(ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, vanguard));
+            new DamageRequest(ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, new Targets { PrimaryTarget = vanguard }));
     }
 
     /// <summary>
@@ -54,7 +53,7 @@ public class DamageHandlerTest
     public void PopRequest()
     {
         damageHandler.PushDamageRequest(
-            new DamageRequest(ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, vanguard));
+            new DamageRequest(ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4], 1f, 0, vanguard, new Targets { PrimaryTarget = vanguard }));
         damageHandler.PopDamageRequest();
     }
 
