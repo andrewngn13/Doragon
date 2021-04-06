@@ -191,18 +191,18 @@ namespace Doragon.Battle
         /// Hides or shows the Slayer menu
         /// </summary>
         /// <param name="showMenu"></param>
-        private async void ShowActionMenu(bool showMenu)
+        private void ShowActionMenu(bool showMenu)
         {
-            await AnimatedFadeInOutLeft(showMenu);
+            var task = AnimatedFadeInOutLeft(showMenu);
             slayerLayout.gameObject.SetActive(showMenu);
             actionMenu.SetActive(showMenu);
         }
 
         private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration = animateTime, int relDist = relativeDistance)
         {
-            slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
-            slayerPortrait.DOFade(showImage ? 1 : 0, duration);
-            await UniTask.Delay(TimeSpan.FromSeconds(duration));
+            var doMove = slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
+            await slayerPortrait.DOFade(showImage ? 1 : 0, duration);
+            // await UniTask.Delay(TimeSpan.FromSeconds(duration));
         }
 
         /// <summary> 

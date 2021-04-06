@@ -31,14 +31,13 @@ namespace Doragon.UI
         }
 
         /// <summary> Loads singular scene asynchronously and displays UI loading prefab during load
-        public async UniTask LoadSceneAsync(string sceneName)
+        public async void LoadSceneAsync(string sceneName)
         {
             if (loading) return;
             loading = true;
             Application.backgroundLoadingPriority = ThreadPriority.Low;
             loadingPrefabCanvas.enabled = true;
             await animateLoader.Animate();
-            await UniTask.Delay(10000);
             try
             {
                 await UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
