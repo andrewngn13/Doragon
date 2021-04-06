@@ -42,7 +42,8 @@ public class DamageHandlerTest
     {
         var noSrc = new DamageRequest();
         noSrc.target = new Targets { PrimaryTarget = vanguard };
-        Assert.Throws<ArgumentNullException>(() => damageHandler.PushDamageRequest(noSrc));
+        var ex = Assert.Throws<ArgumentNullException>(() => damageHandler.PushDamageRequest(noSrc));
+        Debug.Log(ex.Message);
     }
 
     /// <summary>
@@ -51,7 +52,8 @@ public class DamageHandlerTest
     [Test]
     public void PushRequestNullTarget()
     {
-        Assert.Throws<ArgumentNullException>(() => damageHandler.PushDamageRequest(new DamageRequest()));
+        var ex = Assert.Throws<ArgumentNullException>(() => damageHandler.PushDamageRequest(new DamageRequest()));
+        Debug.Log(ex.Message);
     }
 
     /// <summary>
