@@ -52,8 +52,11 @@ namespace Doragon.Battle
         {
             if (damageRequest.target == null)
             {
-                DLogger.LogWarning("No target in this DamageRequest");
-                throw new System.ArgumentNullException();
+                throw new System.ArgumentNullException("No target in this DamageRequest");
+            }
+            else if (damageRequest.source == null)
+            {
+                throw new System.ArgumentNullException("No source in this DamageRequest. Wait, but how?");
             }
             else
             {
