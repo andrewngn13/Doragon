@@ -67,12 +67,12 @@ namespace Doragon.Battle
                 DLogger.Log(ZString.Format("{0} has pushed a DamageRequest to stack. {1} requests in stack.", damageRequest.source.Name, damageRequests.Count));
             }
         }
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public Stack<DamageRequest> GetDamageRequests()
         {
             return damageRequests;
         }
-        #endif
+#endif
         /// <summary>
         /// Pops a damageRequest off the stack if possible. Called when backtracking the slayer collection. Updates Mana Color text.
         /// </summary>
@@ -217,6 +217,11 @@ namespace Doragon.Battle
             }
         }
 
+        public async UniTask<Targets> ConfirmUserTargets(bool myTeam, ActionRole actionRole, TargettingType targetType)
+        {
+            var targetSys = UnityEngine.GameObject.FindObjectOfType<TargettingSystem>();
+            return await targetSys.ConfirmUserTargets(myTeam, actionRole, targetType);
+        }
 
         /* TODO: immediateDamageRequest
         /// <summary>

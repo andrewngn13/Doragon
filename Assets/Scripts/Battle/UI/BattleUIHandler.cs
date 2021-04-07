@@ -16,8 +16,6 @@ namespace Doragon.Battle
         [SerializeField] private Image slayerPortrait;
         [SerializeField] private Transform slayerLayout;
         [SerializeField] private Button normalAttackButton, backButton, roundConfirm, roundCancel;
-        [SerializeField] private ScrollRect skillScrollRect;
-        [SerializeField] private TargettingSystem targettingSystem;
         [SerializeField] private TextMeshProUGUI manaCalculations, manaSum;
         private DamageHandler damageHandler;
         private List<Graphic> actionMenuGraphics;
@@ -62,7 +60,7 @@ namespace Doragon.Battle
         {
             SetInteractable(actionMenu, false);
             DamageRequest request = slayerProfiles[slayerIterator].SelfBattleEntity.NormalAttack();
-            Targets target = await targettingSystem.ConfirmUserTargets(request.TargettingMyTeam, request.actionRole, request.TargetTyping);
+            Targets target = await damageHandler.ConfirmUserTargets(request.TargettingMyTeam, request.actionRole, request.TargetTyping);
             if (target.PrimaryTarget == null)
             {
                 DLogger.Log("No target selected, cancelling targetting");
