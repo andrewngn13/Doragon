@@ -63,14 +63,14 @@ namespace Doragon.Battle
             SetInteractable(actionMenu, false);
             DamageRequest request = slayerProfiles[slayerIterator].SelfBattleEntity.NormalAttack();
             Targets target = await targettingSystem.ConfirmUserTargets(request.TargettingMyTeam, request.actionRole, request.TargetTyping);
-            if (target == null)
+            if (target.PrimaryTarget == null)
             {
                 DLogger.Log("No target selected, cancelling targetting");
                 SetInteractable(actionMenu, true);
             }
             else
             {
-                request.target = targettingSystem.GetFinalTarget();
+                request.target = target;
                 DLogger.Log(ZString.Format("{0} selected for targetting", request.target.PrimaryTarget.Name));
                 damageHandler.PushDamageRequest(request);
                 NextSlayer();

@@ -27,7 +27,7 @@ namespace Doragon.Battle
         // TODO: Provoke => buff to self that increases AI aggro
         public DamageRequest Provoke()
         {
-            return new DamageRequest(true, ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4] { -5, -5, -5, -5 }, 0f, 1, this, null);
+            return new DamageRequest(true, ActionRole.Auxiliary, DamageType.Bash, ManaType.Blue, TargettingType.Single, new int[4] { -5, -5, -5, -5 }, 0f, 1, this, new Targets());
         }
     }
 }

@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 
 namespace Doragon.Battle
 {
-    public class Targets
+    public struct Targets
     {
         public IBattleEntity PrimaryTarget;
         public List<IBattleEntity> AdditionalTargets;
@@ -59,15 +59,10 @@ namespace Doragon.Battle
                 t.Highlight(false);
             });
             if (cancelorConfirm == 0)
-                return null;
+                return new Targets();
             return targetBuffer;
         }
-        public Targets GetFinalTarget()
-        {
-            Targets finalTarget = targetBuffer;
-            targetBuffer = new Targets();
-            return finalTarget;
-        }
+
         /// <summary>
         /// Finds an available target according to targetType. Sets the Targets targetBuffer to this target(s).
         /// </summary>
@@ -81,7 +76,7 @@ namespace Doragon.Battle
             availTargets.ForEach(t => t.canTarget = true);
 
             if (availTargets.Count() == 0)
-                return null;
+                return new Targets();
             switch (targetType)
             {
                 case TargettingType.Single:

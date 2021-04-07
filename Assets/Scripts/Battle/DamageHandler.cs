@@ -50,7 +50,7 @@ namespace Doragon.Battle
         /// <param name="damageRequest"></param>
         public void PushDamageRequest(DamageRequest damageRequest)
         {
-            if (damageRequest.target == null)
+            if (damageRequest.target.PrimaryTarget == null)
             {
                 throw new System.ArgumentNullException("No target in this DamageRequest");
             }
@@ -125,7 +125,7 @@ namespace Doragon.Battle
                     DLogger.LogWarning("IsDead triggered, replacing target!");
                     // replace the target! if we cant replace the target, fumble!
                     var newTarget = targetSys.SelectAvailableTarget(r.TargettingMyTeam, r.actionRole, r.TargetTyping, false);
-                    if (newTarget == null)
+                    if (newTarget.PrimaryTarget == null)
                     {
                         DLogger.Log(ZString.Format("{0} fumbled with no target!", r.source.Name));
                         continue;
