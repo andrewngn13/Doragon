@@ -42,9 +42,9 @@ namespace Doragon.Battle
         {
             damageHandler = new DamageHandler(new ManaLevels(manaLevelPanel), manaCalculations, manaSum);
             // filled left to right, backline, line divider, frontline. slayerProfile list is filled upon finish
-            FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && !s.FrontLine));
+            slayerProfiles.AddRange(FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && !s.FrontLine)));
             Instantiate(lineDividerPrefab).transform.SetParent(slayerLayout, false);
-            FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && s.FrontLine));
+            slayerProfiles.AddRange(FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && s.FrontLine)));
 
             SetSlayer(slayerIterator);
             normalAttackButton.onClick.AddListener(SetNormalAttackListener);
@@ -73,18 +73,17 @@ namespace Doragon.Battle
                 request.target = targettingSystem.GetFinalTarget();
                 DLogger.Log(ZString.Format("{0} selected for targetting", request.target.PrimaryTarget.Name));
                 damageHandler.PushDamageRequest(request);
-                damageHandler.damageRequests.ToList().ForEach(s =>
-                    DLogger.Log(ZString.Format("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name)));
                 NextSlayer();
                 SetInteractable(actionMenu, true);
             }
         }
         /// <summary>
-        /// Fills the <see cref="slayerLayout"> with <see cref="slayerProfilePrefab"> according to line.
+        /// Fills the <see cref="slayerLayout"> with <see cref="slayerProfilePrefab"> according to line. Returns List<BattleSlayerProfile>
         /// </summary>
         /// <param name="slayerLine"></param>
-        private void FillSlayerLine(IEnumerable<IBattleEntity> slayerLine)
+        private List<BattleSlayerProfile> FillSlayerLine(IEnumerable<IBattleEntity> slayerLine)
         {
+            List<BattleSlayerProfile> addedProfiles = new List<BattleSlayerProfile>();
             slayerLine.OrderBy(o => o.LineIndex);
             var sb = ZString.CreateStringBuilder();
             sb.Append("Instantiating slayer profile of ");
@@ -96,16 +95,19 @@ namespace Doragon.Battle
                 var slayerObj = slayerPrefab.GetComponent<BattleSlayerProfile>();
                 // binds the slayer data
                 slayerObj.SelfBattleEntity = slayer;
-                slayerProfiles.Add(slayerObj);
+                addedProfiles.Add(slayerObj);
             }
             DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
             sb.Dispose();
+            return addedProfiles;
         }
 
         private async void SetSlayer(int slayerIndex)
         {
             if (slayerIterator == 0)
                 backButton.interactable = false;
+            // TODO: check if this slayer is dead, skip if so
+
             // TODO: make this a highlight instead
             slayerProfiles[slayerIndex].SetSelectableInteract(true);
             // TODO: make a pooling solution of the skills and portrait with disable/ enable instead of loading
@@ -173,8 +175,6 @@ namespace Doragon.Battle
                 manaCalculations.SetText("");
                 manaSum.SetText("");
                 await damageHandler.ProcessDamageRequests();
-
-                // TODO: reset framing of uiinputhandler back to the first slayer
                 slayerIterator = 0;
                 SetSlayer(slayerIterator);
                 SetInteractable(slayerLayout.gameObject, true);
@@ -253,7 +253,6 @@ namespace Doragon.Battle
             });
             DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
             sb.Dispose();
-
         }
     }
 }

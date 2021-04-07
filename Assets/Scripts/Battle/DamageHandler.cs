@@ -34,7 +34,7 @@ namespace Doragon.Battle
         private TurnType turnTyping;
         private TextMeshProUGUI manaCalc, manaSum;
         private readonly string[] colors = { "red", "green", "blue", "purple" };
-        public Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
+        private Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
         private Random rand = new Random();
 
         public DamageHandler(ManaLevels manaLevels, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText, TurnType turnType = TurnType.COMMAND)
@@ -62,9 +62,17 @@ namespace Doragon.Battle
             {
                 damageRequests.Push(damageRequest);
                 UpdateColorCalc(damageRequests, manaCalc, manaSum);
+                damageRequests.ToList().ForEach(s =>
+                    DLogger.Log(ZString.Format("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name)));
                 DLogger.Log(ZString.Format("{0} has pushed a DamageRequest to stack. {1} requests in stack.", damageRequest.source.Name, damageRequests.Count));
             }
         }
+        #if UNITY_EDITOR
+        public Stack<DamageRequest> GetDamageRequests()
+        {
+            return damageRequests;
+        }
+        #endif
         /// <summary>
         /// Pops a damageRequest off the stack if possible. Called when backtracking the slayer collection. Updates Mana Color text.
         /// </summary>

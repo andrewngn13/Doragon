@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using Doragon.Logging;
 using Doragon.Extensions;
-using Cysharp.Threading.Tasks;
 
 namespace Doragon.Battle
 {
