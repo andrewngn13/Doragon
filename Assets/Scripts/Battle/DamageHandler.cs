@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Doragon.Logging;
 using Cysharp.Text;
+using UnityEngine;
 using TMPro;
 using Cysharp.Threading.Tasks;
 namespace Doragon.Battle
@@ -35,14 +36,17 @@ namespace Doragon.Battle
         private TextMeshProUGUI manaCalc, manaSum;
         private readonly string[] colors = { "red", "green", "blue", "purple" };
         private Stack<DamageRequest> damageRequests = new Stack<DamageRequest>();
-        private Random rand = new Random();
+        private TargettingSystem targetSystem;
+        private System.Random rand = new System.Random();
 
-        public DamageHandler(ManaLevels manaLevels, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText, TurnType turnType = TurnType.COMMAND)
+        public DamageHandler(List<IBattleEntity> battleEntityCollection, ManaLevels manaLevels, TextMeshProUGUI manaCalcText, TextMeshProUGUI manaSumText, TurnType turnType = TurnType.COMMAND)
         {
             manaLevel = manaLevels;
             manaCalc = manaCalcText;
             manaSum = manaSumText;
             turnTyping = turnType;
+            targetSystem = GameObject.FindObjectOfType<TargettingSystem>();
+            targetSystem.SpawnBattleSprites(battleEntityCollection);
         }
         /// <summary>
         /// Command: Processes a damage request and pushes it to the stack if target field is defined. Updates mana calc texts.
@@ -119,12 +123,11 @@ namespace Doragon.Battle
                 DLogger.LogWarning("Fake animation sequence of 3 seconds");
 
                 await UniTask.Delay(TimeSpan.FromSeconds(3));
-                var targetSys = UnityEngine.GameObject.FindObjectOfType<TargettingSystem>();
-                if (targetSys.IsDead(targetWrapper.PrimaryTarget))
+                if (targetSystem.IsDead(targetWrapper.PrimaryTarget))
                 {
                     DLogger.LogWarning("IsDead triggered, replacing target!");
                     // replace the target! if we cant replace the target, fumble!
-                    var newTarget = targetSys.SelectAvailableTarget(r.TargettingMyTeam, r.actionRole, r.TargetTyping, false);
+                    var newTarget = targetSystem.SelectAvailableTarget(r.TargettingMyTeam, r.actionRole, r.TargetTyping, false);
                     if (newTarget.PrimaryTarget == null)
                     {
                         DLogger.Log(ZString.Format("{0} fumbled with no target!", r.source.Name));
@@ -153,11 +156,11 @@ namespace Doragon.Battle
                 // TODO: deathchecking
                 if (targetWrapper.PrimaryTarget.HP <= 0)
                 {
-                    UnityEngine.GameObject.Destroy(targetSys.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
+                    UnityEngine.GameObject.Destroy(targetSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
                     await UniTask.NextFrame();
                     DLogger.Log(ZString.Format("{0} has been destroyed", targetWrapper.PrimaryTarget.Name));
                     // TODO: Win condition
-                    if (targetSys.GetAvailableTargets().Where(t => !t.selfBattleEntity.MyTeam).Count() == 0)
+                    if (targetSystem.GetAvailableTargets().Where(t => !t.selfBattleEntity.MyTeam).Count() == 0)
                     {
                         DLogger.Log("The fight is won");
                         break;
@@ -219,8 +222,7 @@ namespace Doragon.Battle
 
         public async UniTask<Targets> ConfirmUserTargets(bool myTeam, ActionRole actionRole, TargettingType targetType)
         {
-            var targetSys = UnityEngine.GameObject.FindObjectOfType<TargettingSystem>();
-            return await targetSys.ConfirmUserTargets(myTeam, actionRole, targetType);
+            return await targetSystem.ConfirmUserTargets(myTeam, actionRole, targetType);
         }
 
         /* TODO: immediateDamageRequest

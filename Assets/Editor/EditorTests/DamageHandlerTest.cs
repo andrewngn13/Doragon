@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -16,7 +17,7 @@ public class DamageHandlerTest
     {
         manaCalc = new GameObject().AddComponent<TextMeshProUGUI>();
         manaSum = new GameObject().AddComponent<TextMeshProUGUI>();
-        damageHandler = new DamageHandler(new ManaLevels(null), manaCalc, manaSum);
+        damageHandler = new DamageHandler(new List<IBattleEntity>(), new ManaLevels(null), manaCalc, manaSum);
         BattleEntityFactory factory = new BattleEntityFactory();
         vanguard = factory.Build("VAN", "Nan", true, true, 0);
         rearguard = factory.Build("VAN", "San", true, true, 0);
@@ -30,7 +31,7 @@ public class DamageHandlerTest
     [TearDown]
     public void TearDown()
     {
-        damageHandler = new DamageHandler(new ManaLevels(null), manaCalc, manaSum);
+        damageHandler = new DamageHandler(new List<IBattleEntity>(), new ManaLevels(null), manaCalc, manaSum);
     }
 
     /// <summary>

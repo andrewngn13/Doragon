@@ -3,7 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-
+using Cysharp.Text;
+using DG.Tweening;
+using Doragon.Logging;
 namespace Doragon.Battle
 {
     public struct Targets
@@ -13,9 +15,12 @@ namespace Doragon.Battle
     }
     public class TargettingSystem : MonoBehaviour
     {
-        [SerializeField] private Button confirmOK;
-        [SerializeField] private Button cancel;
+        [SerializeField] private GameObject genericBattleSprite;
+        [SerializeField] private Button confirmOK, cancel;
         public Targets targetBuffer = new Targets();
+
+        private const int OffscreenOffset = 15;
+        private const float animateTime = 0.3f;
         private void Start()
         {
             confirmOK.gameObject.SetActive(false);
@@ -116,6 +121,51 @@ namespace Doragon.Battle
                 foreach (var ta in aux)
                     ta.Highlight(false);
             }
+        }
+
+        public void SpawnBattleSprites(ICollection<IBattleEntity> battleEntityCollection)
+        {
+            // TODO: create battle sprites of slayers and enemies
+            // TODO: spawn offscreen and run in animation
+            List<BattleTargettingSprite> spriteTransforms = new List<BattleTargettingSprite>();
+            var sb = ZString.CreateStringBuilder();
+            sb.Append("Instantiating battle sprites of ");
+            if (battleEntityCollection.Count == 0)
+                return;
+            foreach (var entity in battleEntityCollection)
+            {
+                BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
+                sprite.BattleTargettingSpriteInit(entity);
+                sprite.GetComponent<SpriteRenderer>().sortingOrder = sprite.selfBattleEntity.LineIndex;
+                spriteTransforms.Add(sprite);
+
+                // TODO: sprite screen spawning location
+                if (entity.MyTeam)
+                {
+                    sprite.transform.position = new Vector3(
+                        -OffscreenOffset - entity.LineIndex - (!entity.FrontLine ? 4 : 0),
+                         1 - entity.LineIndex, 0);
+                }
+                else
+                {
+                    sprite.transform.position = new Vector3(
+                        OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? -4 : 0),
+                         1 - entity.LineIndex, 0);
+                }
+                sb.Append(ZString.Format("{0}, ", entity.Name));
+            }
+            spriteTransforms.ForEach(t =>
+            {
+                if (t.selfBattleEntity.MyTeam)
+                    t.transform.DOMoveX(t.transform.position.x + OffscreenOffset * 0.9f, animateTime * 8);
+                else
+                {
+                    t.transform.DOMoveX(t.transform.position.x - OffscreenOffset * 0.9f, animateTime * 8);
+                    t.transform.eulerAngles = new Vector3(0, 180, 0);
+                }
+            });
+            DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
+            sb.Dispose();
         }
     }
 }

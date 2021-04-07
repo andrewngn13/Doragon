@@ -12,18 +12,16 @@ namespace Doragon.Battle
 {
     public class BattleUIHandler : MonoBehaviour
     {
-        [SerializeField] private GameObject slayerProfilePrefab, genericBattleSprite, lineDividerPrefab, actionMenu, roundConfirmPrompt, manaLevelPanel;
+        [SerializeField] private GameObject slayerProfilePrefab, lineDividerPrefab, actionMenu, roundConfirmPrompt, manaLevelPanel;
         [SerializeField] private Image slayerPortrait;
         [SerializeField] private Transform slayerLayout;
         [SerializeField] private Button normalAttackButton, backButton, roundConfirm, roundCancel;
         [SerializeField] private TextMeshProUGUI manaCalculations, manaSum;
         private DamageHandler damageHandler;
-        private List<Graphic> actionMenuGraphics;
         private List<BattleSlayerProfile> slayerProfiles = new List<BattleSlayerProfile>();
         private int slayerIterator = 0;
         private const int relativeDistance = -50;
         private const float animateTime = 0.3f;
-        private const int OffscreenOffset = 15;
 
         private void Start()
         {
@@ -38,7 +36,7 @@ namespace Doragon.Battle
         /// <param name="slayerCollection"></param>
         public async void BattleUIHandlerInit(List<IBattleEntity> battleEntityCollection)
         {
-            damageHandler = new DamageHandler(new ManaLevels(manaLevelPanel), manaCalculations, manaSum);
+            damageHandler = new DamageHandler(battleEntityCollection, new ManaLevels(manaLevelPanel), manaCalculations, manaSum);
             // filled left to right, backline, line divider, frontline. slayerProfile list is filled upon finish
             slayerProfiles.AddRange(FillSlayerLine(battleEntityCollection.Where(s => s.MyTeam && !s.FrontLine)));
             Instantiate(lineDividerPrefab).transform.SetParent(slayerLayout, false);
@@ -47,8 +45,7 @@ namespace Doragon.Battle
             SetSlayer(slayerIterator);
             normalAttackButton.onClick.AddListener(SetNormalAttackListener);
             backButton.onClick.AddListener(PrevSlayer);
-            SpawnBattleSprites(battleEntityCollection);
-            actionMenuGraphics = actionMenu.GetComponentsInChildren<Graphic>().ToList();
+
             ShowActionMenu(true);
             slayerPortrait.gameObject.SetActive(false);
             await UniTask.CompletedTask;
@@ -208,49 +205,6 @@ namespace Doragon.Battle
         private void SetInteractable(GameObject gameObject, bool enable)
         {
             gameObject.GetComponentsInChildren<Selectable>().ToList().ForEach(s => s.interactable = enable);
-        }
-
-        private void SpawnBattleSprites(ICollection<IBattleEntity> battleEntityCollection)
-        {
-            // TODO: create battle sprites of slayers and enemies
-            // TODO: spawn offscreen and run in animation
-            List<BattleTargettingSprite> spriteTransforms = new List<BattleTargettingSprite>();
-            var sb = ZString.CreateStringBuilder();
-            sb.Append("Instantiating battle sprites of ");
-            foreach (var entity in battleEntityCollection)
-            {
-                BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
-                sprite.BattleTargettingSpriteInit(entity);
-                sprite.GetComponent<SpriteRenderer>().sortingOrder = sprite.selfBattleEntity.LineIndex;
-                spriteTransforms.Add(sprite);
-
-                // TODO: sprite screen spawning location
-                if (entity.MyTeam)
-                {
-                    sprite.transform.position = new Vector3(
-                        -OffscreenOffset - entity.LineIndex - (!entity.FrontLine ? 4 : 0),
-                         1 - entity.LineIndex, 0);
-                }
-                else
-                {
-                    sprite.transform.position = new Vector3(
-                        OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? -4 : 0),
-                         1 - entity.LineIndex, 0);
-                }
-                sb.Append(ZString.Format("{0}, ", entity.Name));
-            }
-            spriteTransforms.ForEach(t =>
-            {
-                if (t.selfBattleEntity.MyTeam)
-                    t.transform.DOMoveX(t.transform.position.x + OffscreenOffset * 0.9f, animateTime * 8);
-                else
-                {
-                    t.transform.DOMoveX(t.transform.position.x - OffscreenOffset * 0.9f, animateTime * 8);
-                    t.transform.eulerAngles = new Vector3(0, 180, 0);
-                }
-            });
-            DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
-            sb.Dispose();
         }
     }
 }
