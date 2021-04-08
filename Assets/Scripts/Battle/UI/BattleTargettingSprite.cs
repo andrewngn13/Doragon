@@ -52,9 +52,9 @@ namespace Doragon.Battle
 
         public async UniTask DeathFade()
         {
-            hpBarHighlight.DOFade(0,tweenTime);
-            hpBar.DOFade(0,tweenTime);
-            currentHpBar.DOFade(0,tweenTime);
+            var fade = hpBarHighlight.DOFade(0,tweenTime);
+            var fade2 = hpBar.DOFade(0,tweenTime);
+            var fade3 = currentHpBar.DOFade(0,tweenTime);
             await sprite.DOFade(0,tweenTime);
         }
 

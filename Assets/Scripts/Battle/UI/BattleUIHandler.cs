@@ -193,7 +193,8 @@ namespace Doragon.Battle
 
         private async UniTask AnimatedFadeInOutLeft(bool showImage, float duration = animateTime, int relDist = relativeDistance)
         {
-            var doMove = slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
+            var awaitFalse = slayerPortrait.transform.DOMoveX(showImage ? 0 : relDist, duration);
+            await UniTask.Delay(System.TimeSpan.FromSeconds(duration));
             // TODO: do i need slayer portrait? => interferes with battle sprites
             // await slayerPortrait.DOFade(showImage ? 1 : 0, duration);
         }

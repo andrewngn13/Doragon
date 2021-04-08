@@ -8,13 +8,8 @@ namespace Doragon.Battle
         Red, Blue, Green, Violet
     }
 
-    public enum DamageType
-    {
-        Cut, Stab, Bash, Fire, Ice, Electric, Dark
-    }
     public abstract class IBattleEntity
     {
-        public event EventHandler HPChanged;
         public bool MyTeam { get; }
         public bool FrontLine { get; }
         public int LineIndex { get; }
