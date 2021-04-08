@@ -149,7 +149,7 @@ namespace Doragon.Battle
                         -OffscreenOffset - entity.LineIndex - (!entity.FrontLine ? 4 : 0),
                          1 - entity.LineIndex, 0);
                 }
-                else
+                else // enemy team
                 {
                     sprite.transform.position = new Vector3(
                         OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? 4 : 0),

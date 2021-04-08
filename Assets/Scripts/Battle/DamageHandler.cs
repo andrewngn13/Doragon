@@ -106,19 +106,27 @@ namespace Doragon.Battle
             DLogger.Log("Starting DamageRequest stack processing");
             if (damageRequests.Count <= 0)
                 throw new System.IndexOutOfRangeException("DamageRequest stack is empty or out of bounds");
-            // TODO: Modularize speed calculations for easier testing / tweaking
-            // we create a new sorted by speed list of requests
-            var sb = ZString.CreateStringBuilder();
-            var sortedRequests = damageRequests.ToList<DamageRequest>().OrderByDescending(s => s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod));
-            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}: {1}, ", s.source.Name, s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod)));
-            sb.Append("\nRound Order: ");
-            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name));
-            DLogger.Log(sb.ToString());
-            sb.Dispose();
+            // TODO: Create all of the enemyAI DamageRequests
+            targetSystem.GetAvailableTargets().Where(t => t.selfBattleEntity.AI != null).ToList().ForEach(
+                t =>
+                {
+                    var enemy = t.selfBattleEntity;
+                    var damageRequest = enemy.NormalAttack();
+                    damageRequest.target = enemy.AI.SelectTargets();
+                    PushDamageRequest(damageRequest);
+                    DLogger.Log("Logging enemy AI action");
+                }
+            );
             //
+            var sortedRequests = SortRequestsBySpeed(damageRequests);
 
-            foreach (var r in sortedRequests)
+            while (sortedRequests.Count() > 0)
             {
+                // reorder to account for new DamageRequests mid-processing
+                sortedRequests = SortRequestsBySpeed(sortedRequests);
+                //
+                var r = sortedRequests.Last();
+                sortedRequests.RemoveAt(sortedRequests.Count() - 1);
                 Targets targetWrapper = r.target;
                 // TODO: Add auto target selection when main target cannot be selected
                 if (targetSystem.IsDead(targetWrapper.PrimaryTarget))
@@ -157,6 +165,10 @@ namespace Doragon.Battle
                 // TODO: deathchecking
                 if (targetWrapper.PrimaryTarget.CurrentHP <= 0)
                 {
+                    // TODO: scrub existing entries with this as the source
+                    var lostSourceRequests = sortedRequests.Where(t => t.source == targetWrapper.PrimaryTarget);
+                    lostSourceRequests.ToList().ForEach(r => sortedRequests.Remove(r));
+                    //
                     BattleTargettingSprite targetToDie = targetSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget);
                     await targetToDie.DeathFade();
                     UnityEngine.GameObject.Destroy(targetToDie.gameObject);
@@ -183,6 +195,20 @@ namespace Doragon.Battle
             // TODO: Defer animation and damageNumber data
             DLogger.Log("DamageRequest stack processing complete");
             await UniTask.CompletedTask;
+        }
+
+        private List<DamageRequest> SortRequestsBySpeed(IEnumerable<DamageRequest> speedRequests)
+        {
+            // TODO: Modularize speed calculations for easier testing / tweaking
+            // we create a new sorted by speed list of requests
+            var sb = ZString.CreateStringBuilder();
+            var sortedRequests = speedRequests.OrderBy(s => s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod));
+            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}: {1}, ", s.source.Name, s.source.SPD * rand.Next(minSpeedMod, maxSpeedMod)));
+            sb.Append("\nRound Order: ");
+            sortedRequests.ToList().ForEach(s => sb.AppendFormat("{0}:{1}, ", s.source.Name, s.target.PrimaryTarget.Name));
+            DLogger.Log(sb.ToString());
+            sb.Dispose();
+            return sortedRequests.ToList();
         }
 
         /// <summary>

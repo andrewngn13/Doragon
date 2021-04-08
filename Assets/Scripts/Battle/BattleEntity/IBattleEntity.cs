@@ -14,6 +14,7 @@ namespace Doragon.Battle
         public bool FrontLine { get; }
         public int LineIndex { get; }
         public string Name { get; }
+        public IBattleAI AI { get; set; }
         ManaType manaTyping { get; }
         DamageType normalDamageTyping { get; }
         public int CurrentHP { get; set; }

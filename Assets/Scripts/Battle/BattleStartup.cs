@@ -16,6 +16,7 @@ namespace Doragon.Battle
         {
             List<IBattleEntity> battleEntities = new List<IBattleEntity>();
             BattleEntityFactory factory = new BattleEntityFactory();
+            BattleAIFactory enemyAIFactory = new BattleAIFactory();
             DLogger.Log("Producing 3 player frontline VAN {Nan, Kazan, Woolie} and 1 backline VAN {ADA}");
             battleEntities.Add(factory.Build("VAN", "Nan", true, true, 0));
             battleEntities.Add(factory.Build("VAN", "Kazan", true, true, 1));
@@ -28,10 +29,17 @@ namespace Doragon.Battle
             battleEntities.Add(factory.Build("VAN", "Doragon", false, false, 0));
             battleEntities.Add(factory.Build("VAN", "Doragon", false, false, 1));
 
-            if (!ValidateTeam(battleEntities.Where(e => e.MyTeam)))
+            var myTeam = battleEntities.Where(e => e.MyTeam);
+            var theirTeam = battleEntities.Where(e => !e.MyTeam);
+
+            if (!ValidateTeam(myTeam))
                 throw new System.ArgumentException("My team battle entities are not valid for use");
-            if (!ValidateTeam(battleEntities.Where(e => !e.MyTeam)))
+            if (!ValidateTeam(theirTeam))
                 throw new System.ArgumentException("Enemy battle entities are not valid for use");
+            //TODO: if pvp, remove this component
+            // add an AI component
+            // TODO: if ally ai, change this conditional
+            theirTeam.ToList().ForEach(f => f.AI = enemyAIFactory.Build("Wulf", myTeam));
             DLogger.Log("Entities validated");
             var handler = GameObject.FindObjectOfType<BattleUIHandler>();
             DLogger.Log("Setting up UI components: Slayer profiles, Slayer sprites, enemy sprites");

@@ -1,9 +1,19 @@
 using Doragon.Logging;
 namespace Doragon.Battle
 {
+    /// <summary>
+    /// Cut, Stab, Bash, Fire, Ice, Electric, Dark
+    /// </summary>
     public enum DamageType
     {
         Cut, Stab, Bash, Fire, Ice, Electric, Dark
+    }
+    /// <summary>
+    /// Single, Row, Column, All, Splash
+    /// </summary>
+    public enum TargettingType
+    {
+        Single, Row, Column, All, Splash
     }
     public struct DamageRequest
     {

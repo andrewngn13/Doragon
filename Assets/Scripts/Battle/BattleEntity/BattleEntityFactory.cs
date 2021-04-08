@@ -1,4 +1,3 @@
-
 namespace Doragon.Battle
 {
     public class BattleEntityFactory
