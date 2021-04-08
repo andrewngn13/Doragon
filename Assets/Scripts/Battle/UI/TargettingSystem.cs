@@ -18,7 +18,7 @@ namespace Doragon.Battle
         [SerializeField] private GameObject genericBattleSprite;
         [SerializeField] private Button confirmOK, cancel;
         public Targets targetBuffer = new Targets();
-
+        public bool CanHighlight = false;
         private const int OffscreenOffset = 15;
         private const float animateTime = 0.3f;
         private void Start()
@@ -105,6 +105,8 @@ namespace Doragon.Battle
             // TODO: figure out query for additional targets
             // TODO: Add extra auto target selection for stab / electric typed aoe
             // use targettingType
+            // dont highlight unless targetting on
+            if (!CanHighlight) return;
             HighlightTargets(target);
         }
         /// <summary>

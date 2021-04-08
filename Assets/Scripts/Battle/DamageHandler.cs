@@ -222,7 +222,10 @@ namespace Doragon.Battle
 
         public async UniTask<Targets> ConfirmUserTargets(bool myTeam, ActionRole actionRole, TargettingType targetType)
         {
-            return await targetSystem.ConfirmUserTargets(myTeam, actionRole, targetType);
+            targetSystem.CanHighlight = true;
+            var target = await targetSystem.ConfirmUserTargets(myTeam, actionRole, targetType);
+            targetSystem.CanHighlight = false;
+            return target;
         }
 
         /* TODO: immediateDamageRequest
