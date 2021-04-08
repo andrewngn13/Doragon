@@ -45,7 +45,8 @@ namespace Doragon.Battle
             SetSlayer(slayerIterator);
             normalAttackButton.onClick.AddListener(SetNormalAttackListener);
             backButton.onClick.AddListener(PrevSlayer);
-
+            // wait 3 seconds
+            await UniTask.Delay(3000);
             ShowActionMenu(true);
             slayerPortrait.gameObject.SetActive(false);
             await UniTask.CompletedTask;

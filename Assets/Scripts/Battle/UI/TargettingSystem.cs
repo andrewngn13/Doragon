@@ -20,7 +20,7 @@ namespace Doragon.Battle
         public Targets targetBuffer = new Targets();
         public bool CanHighlight = false;
         private const int OffscreenOffset = 15;
-        private const float animateTime = 0.3f;
+        private const float animateTime = 2.4f;
         private void Start()
         {
             confirmOK.gameObject.SetActive(false);
@@ -139,7 +139,7 @@ namespace Doragon.Battle
             {
                 BattleTargettingSprite sprite = Instantiate(genericBattleSprite).GetComponent<BattleTargettingSprite>();
                 sprite.BattleTargettingSpriteInit(entity);
-                sprite.GetComponent<SpriteRenderer>().sortingOrder = sprite.selfBattleEntity.LineIndex;
+                sprite.GetComponentInChildren<SpriteRenderer>().sortingOrder = sprite.selfBattleEntity.LineIndex;
                 spriteTransforms.Add(sprite);
 
                 // TODO: sprite screen spawning location
@@ -154,18 +154,16 @@ namespace Doragon.Battle
                     sprite.transform.position = new Vector3(
                         OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? 4 : 0),
                          1 - entity.LineIndex, 0);
+                    sprite.sprite.flipX = true;
                 }
                 sb.Append(ZString.Format("{0}, ", entity.Name));
             }
             spriteTransforms.ForEach(t =>
             {
                 if (t.selfBattleEntity.MyTeam)
-                    t.transform.DOMoveX(t.transform.position.x + OffscreenOffset * 0.9f, animateTime * 8);
+                    t.transform.DOMoveX(t.transform.position.x + OffscreenOffset * 0.9f, animateTime);
                 else
-                {
-                    t.transform.DOMoveX(t.transform.position.x - OffscreenOffset * 0.9f, animateTime * 8);
-                    t.transform.eulerAngles = new Vector3(0, 180, 0);
-                }
+                    t.transform.DOMoveX(t.transform.position.x - OffscreenOffset * 0.9f, animateTime);
             });
             DLogger.Log(sb.ToString().Substring(0, sb.Length - 2));
             sb.Dispose();

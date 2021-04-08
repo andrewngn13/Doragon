@@ -48,6 +48,7 @@ namespace Doragon.Battle
             targetSystem = GameObject.FindObjectOfType<TargettingSystem>();
             targetSystem.SpawnBattleSprites(battleEntityCollection);
         }
+
         /// <summary>
         /// Command: Processes a damage request and pushes it to the stack if target field is defined. Updates mana calc texts.
         /// </summary>
@@ -120,9 +121,6 @@ namespace Doragon.Battle
             {
                 Targets targetWrapper = r.target;
                 // TODO: Add auto target selection when main target cannot be selected
-                DLogger.LogWarning("Fake animation sequence of 3 seconds");
-
-                await UniTask.Delay(TimeSpan.FromSeconds(3));
                 if (targetSystem.IsDead(targetWrapper.PrimaryTarget))
                 {
                     DLogger.LogWarning("IsDead triggered, replacing target!");
@@ -143,20 +141,25 @@ namespace Doragon.Battle
                 {
                     DLogger.Log(ZString.Format("{0} fumbled from no mana!", r.source.Name));
                     // TODO: fumble animation?
+                    await UniTask.Delay(TimeSpan.FromSeconds(1.5));
                     continue;
                 }
                 // TODO: attach damage to a projectile or animation hit
                 // TODO: animate the hp bar
-                targetWrapper.PrimaryTarget.HP -= 5;
+                targetWrapper.PrimaryTarget.CurrentHP -= 5;
                 manaLevel.AnimateMana();
+                DLogger.LogWarning("Fake animation sequence of 3 seconds");
+                await UniTask.Delay(TimeSpan.FromSeconds(3));
                 // TODO: output action to the log
                 // TODO: more involved damage, buffing, and debuffing
                 // TODO: damage formula
 
                 // TODO: deathchecking
-                if (targetWrapper.PrimaryTarget.HP <= 0)
+                if (targetWrapper.PrimaryTarget.CurrentHP <= 0)
                 {
-                    UnityEngine.GameObject.Destroy(targetSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget).gameObject);
+                    BattleTargettingSprite targetToDie = targetSystem.GetAvailableTargets().Single(tsprite => tsprite.selfBattleEntity == targetWrapper.PrimaryTarget);
+                    await targetToDie.DeathFade();
+                    UnityEngine.GameObject.Destroy(targetToDie.gameObject);
                     await UniTask.NextFrame();
                     DLogger.Log(ZString.Format("{0} has been destroyed", targetWrapper.PrimaryTarget.Name));
                     // TODO: Win condition
@@ -167,7 +170,7 @@ namespace Doragon.Battle
                     }
                 }
                 else
-                    DLogger.Log(ZString.Format("{0} has {1} HP now", targetWrapper.PrimaryTarget.Name, r.target.PrimaryTarget.HP));
+                    DLogger.Log(ZString.Format("{0} has {1} HP now", targetWrapper.PrimaryTarget.Name, r.target.PrimaryTarget.CurrentHP));
                 // more details about death: must darken a dead slayer frame, must death animate target sprites, 
                 // remove any damageRequests with them as the source
                 // must update BattleUIHandlers collection of Battle profiles so dead ones are skipped

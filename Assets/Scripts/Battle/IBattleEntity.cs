@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Doragon.Battle
 {
@@ -13,9 +12,8 @@ namespace Doragon.Battle
     {
         Cut, Stab, Bash, Fire, Ice, Electric, Dark
     }
-    public abstract class IBattleEntity : INotifyPropertyChanged
+    public abstract class IBattleEntity
     {
-        public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HPChanged;
         public bool MyTeam { get; }
         public bool FrontLine { get; }
@@ -23,8 +21,8 @@ namespace Doragon.Battle
         public string Name { get; }
         ManaType manaTyping { get; }
         DamageType normalDamageTyping { get; }
-        int currentHp { get; }
-        public int HP { get; set; }
+        public int CurrentHP { get; set; }
+        public int HP { get; }
         public int SPD { get; }
         int ATK { get; }
         int DEF { get; }
@@ -53,28 +51,12 @@ namespace Doragon.Battle
             manaTyping = manaType;
             normalDamageTyping = normalDamageType;
             HP = hp;
-            currentHp = HP;
+            CurrentHP = HP;
             ATK = atk;
             DEF = def;
             MATK = matk;
             MDEF = mdef;
             SPD = spd;
-        }
-        protected void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-                handler(this, e);
-        }
-        protected void OnPropertyChanged(string propertyName)
-        {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-        protected void OnHPChanged(EventArgs e)
-        {
-            EventHandler handler = HPChanged;
-            if (handler != null)
-                handler(this, e);
         }
         public DamageRequest NormalAttack()
         {
