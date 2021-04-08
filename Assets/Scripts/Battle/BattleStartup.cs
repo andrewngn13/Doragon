@@ -21,8 +21,12 @@ namespace Doragon.Battle
             battleEntities.Add(factory.Build("VAN", "Kazan", true, true, 1));
             battleEntities.Add(factory.Build("VAN", "Woolie", true, true, 2));
             battleEntities.Add(factory.Build("VAN", "Ada", true, false, 0));
-            DLogger.Log("Producing 1 enemy frontline VAN {Doragon}");
+            DLogger.Log("Producing 3 enemy frontline VAN {Doragon}, 2 backline");
             battleEntities.Add(factory.Build("VAN", "Doragon", false, true, 0));
+            battleEntities.Add(factory.Build("VAN", "Doragon", false, true, 1));
+            battleEntities.Add(factory.Build("VAN", "Doragon", false, true, 2));
+            battleEntities.Add(factory.Build("VAN", "Doragon", false, false, 0));
+            battleEntities.Add(factory.Build("VAN", "Doragon", false, false, 1));
 
             if (!ValidateTeam(battleEntities.Where(e => e.MyTeam)))
                 throw new System.ArgumentException("My team battle entities are not valid for use");

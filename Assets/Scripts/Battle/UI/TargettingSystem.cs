@@ -74,7 +74,8 @@ namespace Doragon.Battle
         /// <param name="targetType"></param>
         public Targets SelectAvailableTarget(bool myTeam, ActionRole actionRole, TargettingType targetType, bool openTargets)
         {
-            var availTargets = GetAvailableTargets().Where(t => t.selfBattleEntity.MyTeam == myTeam).ToList();
+            var availTargets = GetAvailableTargets().Where(t => t.selfBattleEntity.MyTeam == myTeam).ToList().
+                OrderBy(s => !s.selfBattleEntity.FrontLine).ThenBy(t => t.selfBattleEntity.LineIndex).ToList();
             // TODO: what if there are no targets?
             // TODO: Get proper targettingType
             // TODO: fix actionRole targetting
@@ -149,7 +150,7 @@ namespace Doragon.Battle
                 else
                 {
                     sprite.transform.position = new Vector3(
-                        OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? -4 : 0),
+                        OffscreenOffset + entity.LineIndex + (!entity.FrontLine ? 4 : 0),
                          1 - entity.LineIndex, 0);
                 }
                 sb.Append(ZString.Format("{0}, ", entity.Name));
