@@ -46,6 +46,10 @@ namespace Doragon.Battle
             manaSum = manaSumText;
             turnTyping = turnType;
             targetSystem = GameObject.FindObjectOfType<TargettingSystem>();
+            #if UNITY_EDITOR
+            if (targetSystem == null) 
+                targetSystem = new GameObject().AddComponent<TargettingSystem>();
+            #endif
             targetSystem.SpawnBattleSprites(battleEntityCollection);
         }
 
