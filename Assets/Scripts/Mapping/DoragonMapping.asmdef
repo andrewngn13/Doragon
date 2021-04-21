@@ -1,0 +1,17 @@
+{
+    "name": "DoragonMapping",
+    "rootNamespace": "",
+    "references": [
+        "GUID:6f873f0a1ccccac41a3f87b7b802910d",
+        "GUID:33661e06c33d31b4c9223810bf503247"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,14 +3,6 @@ using UnityEngine;
 // Own static loggger manager
 namespace Doragon.Logging
 {
-    /*
-    public static class LogManager
-    {
-        // ...
-    }
-
-    public class Debug
-    { }    */
     public static class DLogger
     {
         public static void Log(string content)
